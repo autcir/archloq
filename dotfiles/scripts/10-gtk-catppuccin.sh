@@ -38,16 +38,24 @@ say "Individuazione nome tema GTK Catppuccin Mocha Blue"
 FOUND_THEME=""
 for d in /usr/share/themes ~/.themes; do
   if [ -d "$d" ]; then
-    FOUND=$(ls "$d" 2>/dev/null | grep -iE "catppuccin.*mocha.*blue|catppuccin-mocha.*blue" | head -1 || true)
-    [ -n "$FOUND" ] && FOUND_THEME="$FOUND" && break
+    for _c in "$d"/*[Cc]atppuccin*[Mm]ocha*[Bb]lue*; do
+      [ -e "$_c" ] || continue
+      FOUND_THEME=$(basename "$_c")
+      break
+    done
+    [ -n "$FOUND_THEME" ] && break
   fi
 done
 if [ -z "$FOUND_THEME" ]; then
   # Fallback: cerca solo "Catppuccin-Mocha"
   for d in /usr/share/themes ~/.themes; do
     if [ -d "$d" ]; then
-      FOUND=$(ls "$d" 2>/dev/null | grep -iE "catppuccin.*mocha" | head -1 || true)
-      [ -n "$FOUND" ] && FOUND_THEME="$FOUND" && break
+      for _c in "$d"/*[Cc]atppuccin*[Mm]ocha*; do
+        [ -e "$_c" ] || continue
+        FOUND_THEME=$(basename "$_c")
+        break
+      done
+      [ -n "$FOUND_THEME" ] && break
     fi
   done
 fi

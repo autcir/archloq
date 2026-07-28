@@ -21,7 +21,7 @@ if [[ "${LOQ_ENABLE_LLAMA_CPP:-1}" == "1" ]]; then
     git clone https://github.com/ggerganov/llama.cpp.git
     cd llama.cpp
     cmake -DLLAMA_CUDA=on -B build
-    cmake --build build -j$(nproc)
+    cmake --build build -j"$(nproc)"
     cmake --install build
     ok "llama.cpp built with CUDA"
 fi

@@ -1,0 +1,6 @@
+# Colour variables and shared helpers are defined in lib/utils.sh and consumed
+# by the scripts that source it, so shellcheck cannot see the use site.
+disable=SC2034
+
+# `source "$SCRIPT_DIR/../lib/utils.sh"` is a runtime-resolved path.
+disable=SC1090,SC1091

@@ -35,8 +35,14 @@ plasma-apply-colorscheme CatppuccinMochaBlue 2>/dev/null \
 say "Setting Kvantum theme (Catppuccin Mocha Blue)"
 KV_DIR="$HOME/.config/Kvantum"
 if ls "$KV_DIR"/*[Mm]ocha* >/dev/null 2>&1; then
-  KV_THEME=$(ls "$KV_DIR" | grep -iE 'mocha-blue|MochaBlue' | head -1)
-  [ -z "$KV_THEME" ] && KV_THEME=$(ls "$KV_DIR" | grep -iE 'mocha' | head -1)
+  # Globs instead of `ls | grep`: shell globbing already matches these names
+  # and survives entries containing spaces.
+  KV_THEME=""
+  for _c in "$KV_DIR"/*[Mm]ocha*[Bb]lue* "$KV_DIR"/*[Mm]ocha*; do
+    [ -e "$_c" ] || continue
+    KV_THEME=$(basename "$_c")
+    break
+  done
   kvantummanager --set "$KV_THEME" 2>/dev/null \
     && ok "Kvantum theme: $KV_THEME" \
     || skip "kvantummanager non disponibile (applica manualmente)"
