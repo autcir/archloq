@@ -3,6 +3,19 @@
 # Output: lista di check con ✅ / ❌ per ogni componente.
 set -uo pipefail
 
+# Returns the basename of the first entry in $1 matching glob $2, or nothing.
+# Replaces `ls | grep`, which breaks on names containing spaces.
+first_match() {
+  local dir="$1" pattern="$2" c
+  for c in "$dir"/$pattern; do
+    [ -e "$c" ] || continue
+    basename "$c"
+    return 0
+  done
+  return 1
+}
+
+
 PASS=0
 FAIL=0
 WARN=0
@@ -46,7 +59,7 @@ fi
 # --- Look and Feel ----------------------------------------------------------
 echo ""
 echo "🌐 Look & Feel"
-LAF=$(ls ~/.local/share/plasma/look-and-feel/ 2>/dev/null | grep -i catppuccin | head -1)
+LAF=$(first_match ~/.local/share/plasma/look-and-feel "*[Cc]atppuccin*" || true)
 if [ -n "$LAF" ]; then
   pass "Look-and-feel installato: $LAF"
 else
@@ -56,7 +69,7 @@ fi
 # --- Aurorae Window Decoration ----------------------------------------------
 echo ""
 echo "🪟  Window Decoration (Aurorae)"
-AURORAE=$(ls ~/.local/share/aurorae/themes/ 2>/dev/null | grep -i catppuccin | head -1)
+AURORAE=$(first_match ~/.local/share/aurorae/themes "*[Cc]atppuccin*" || true)
 if [ -n "$AURORAE" ]; then
   pass "Aurorae theme: $AURORAE"
 else
@@ -143,8 +156,8 @@ fi
 echo ""
 echo "🏔  Wallpaper"
 WALL_DIR="$HOME/.local/share/wallpapers"
-if ls "$WALL_DIR" 2>/dev/null | grep -qi "catppuccin\|mocha"; then
-  WALL=$(ls "$WALL_DIR" 2>/dev/null | grep -i "catppuccin\|mocha" | head -1)
+WALL=$(first_match "$WALL_DIR" "*[Cc]atppuccin*" || first_match "$WALL_DIR" "*[Mm]ocha*" || true)
+if [ -n "$WALL" ]; then
   pass "Wallpaper Catppuccin trovato: $WALL"
 else
   warn "Nessun wallpaper Catppuccin in $WALL_DIR — esegui 11-wallpaper-catppuccin.sh"

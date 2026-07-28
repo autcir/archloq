@@ -61,8 +61,11 @@ else
 fi
 
 echo
-if (( $? )); then
-    printf '\033[1;31m✗ NOT SAFE TO REBOOT — fix issues above.\033[0m\n'
+# WARN_COUNT comes from lib/utils.sh. The previous test was `if (( $? ))`,
+# which read the exit status of the `echo` above — always 0 — so this script
+# always reported "safe to reboot", even with failing checks.
+if (( WARN_COUNT )); then
+    printf '\033[1;33m! %d check(s) failed — review the warnings above before rebooting.\033[0m\n' "$WARN_COUNT"
     exit 1
 else
     printf '\033[1;32m✓ ALL CLEAR — safe to reboot.\033[0m\n'

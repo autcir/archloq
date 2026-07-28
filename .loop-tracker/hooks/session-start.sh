@@ -23,7 +23,7 @@ if [ "$OPEN_LOOPS" -gt 0 ]; then
   # come ', ' tronca al primo carattere, producendo virgole senza spazio e
   # senza modo affidabile di stripparne una finale. paste con -s -d è la via
   # portabile per unire righe con un separatore letterale.
-  NAMES=$(find "$DOCS_DIR/loop" -maxdepth 1 -name "LOOP-*.md" 2>/dev/null | xargs -n1 basename | sed 's/\.md$//' | paste -sd ',' - | sed 's/,/, /g')
+  NAMES=$(find "$DOCS_DIR/loop" -maxdepth 1 -name "LOOP-*.md" -printf '%f\n' 2>/dev/null | sed 's/\.md$//' | paste -sd ',' - | sed 's/,/, /g')
   MSG="loop-tracker [ebrain/brain]: ${OPEN_LOOPS} loop aperti (${NAMES}). /archive-loop o /new-handoff. SoT=${DOCS_DIR}"
 else
   MSG="loop-tracker [ebrain/brain]: nessun loop aperto. SoT=${DOCS_DIR}"

@@ -12,10 +12,18 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
-say() { printf '\n${BLUE}==>${NC} %s\n' "$*"; }
-ok() { printf '  ${GREEN}✓${NC} %s\n' "$*"; }
-warn() { printf '  ${YELLOW}!${NC} %s\n' "$*"; }
-error() { printf '  ${RED}✗${NC} %s\n' "$*"; }
+# Counts every warn() call so callers can branch on whether anything went
+# wrong. 99_safe_reboot_check.sh relies on this: it previously tested `$?`
+# after an `echo`, which is always 0, so it reported "safe to reboot"
+# unconditionally.
+WARN_COUNT=0
+
+# Double quotes: with single quotes printf emits the literal text
+# "${BLUE}==>${NC}" instead of the colour escapes.
+say() { printf "\n${BLUE}==>${NC} %s\n" "$*"; }
+ok() { printf "  ${GREEN}✓${NC} %s\n" "$*"; }
+warn() { WARN_COUNT=$((WARN_COUNT + 1)); printf "  ${YELLOW}!${NC} %s\n" "$*"; }
+error() { printf "  ${RED}✗${NC} %s\n" "$*"; }
 
 # Backup file
 bak() { 
