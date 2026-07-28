@@ -51,6 +51,16 @@ config/*password*
 config/*key*
 config/secrets.json
 
+# ...but always keep the example/template files users need
+!*.example
+!*.template
+!*.sample
+
+# Runtime: upstream reference clones, fetched on demand (see runtime/README.md)
+runtime/*
+!runtime/README.md
+!runtime/fetch-runtime.sh
+
 # Build artifacts
 *.pyc
 __pycache__/
