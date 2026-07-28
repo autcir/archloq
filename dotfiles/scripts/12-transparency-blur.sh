@@ -36,6 +36,7 @@ say "[3/4] KWin window rules: opacity per Dolphin, Kate, System Settings, Konsol
 EXISTING=$(kreadconfig6 --file ~/.config/kwinrulesrc --group General --key count 2>/dev/null || echo 0)
 
 # Funzione helper: aggiunge/sovrascrive regola
+add_rule() {
   local n="$1" desc="$2" wmclass="$3" match="$4" active="$5" inactive="$6"
   kwriteconfig6 --file ~/.config/kwinrulesrc --group "$n" --key Description "$desc"
   kwriteconfig6 --file ~/.config/kwinrulesrc --group "$n" --key wmclass "$wmclass"
@@ -48,6 +49,19 @@ EXISTING=$(kreadconfig6 --file ~/.config/kwinrulesrc --group General --key count
 }
 
 # wmclassmatch: 1=esatto, 2=substring, 3=regex, 4=unimportante
+
+add_rule 1  "Dolphin transparency"         dolphin          2 92 85
+add_rule 2  "Kate transparency"            kate             2 92 85
+add_rule 3  "Konsole transparency"         konsole          2 88 80
+add_rule 4  "System Settings transparency" systemsettings   2 92 85
+add_rule 5  "Ghostty transparency"         ghostty          2 88 80
+add_rule 6  "Gwenview transparency"        gwenview         2 92 85
+add_rule 7  "Ark transparency"             ark              2 92 85
+add_rule 8  "Okular transparency"          okular           2 92 85
+add_rule 9  "Spectacle transparency"       spectacle        2 92 85
+add_rule 10 "KCalc transparency"           kcalc            2 92 85
+add_rule 11 "Filelight transparency"       filelight        2 92 85
+add_rule 12 "Partition Manager transp."    partitionmanager 2 92 85
 
 kwriteconfig6 --file ~/.config/kwinrulesrc --group General --key count 12
 ok "12 regole opacity applicate"
