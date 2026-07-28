@@ -151,23 +151,96 @@ jobs:
 
 Copy to `~/.claude.json` and fill in values.
 
-### config/secrets.yaml.example
+### config/secrets.json.example
 
-```yaml
-api_keys:
-  openvidia: "YOUR_API_KEY_HERE"
-  anthropic: "YOUR_API_KEY_HERE"
-  openai: "YOUR_API_KEY_HERE"
+```json
+{
+  "openvidia": {
+    "api_key": "YOUR_OPENVIDIA_API_KEY_HERE",
+    "endpoint": "https://api.openvidia.ai/v1"
+  },
+  "anthropic": {
+    "api_key": "YOUR_ANTHROPIC_API_KEY_HERE"
+  },
+  "openai": {
+    "api_key": "YOUR_OPENAI_API_KEY_HERE"
+  },
+  "cloudflare": {
+    "api_token": "YOUR_CLOUDFLARE_API_TOKEN_HERE",
+    "account_id": "YOUR_CLOUDFLARE_ACCOUNT_ID_HERE"
+  },
+  "google": {
+    "places_api_key": "YOUR_GOOGLE_PLACES_API_KEY_HERE",
+    "agent_platform_api_key": "YOUR_GOOGLE_AGENT_PLATFORM_API_KEY_HERE"
+  },
+  "meta_ads": {
+    "access_token": "YOUR_META_ACCESS_TOKEN_HERE",
+    "account_id": "YOUR_META_ACCOUNT_ID_HERE",
+    "app_id": "YOUR_META_APP_ID_HERE",
+    "app_secret": "YOUR_META_APP_SECRET_HERE"
+  },
+  "instagram": {
+    "studio_centros_token": "YOUR_INSTAGRAM_TOKEN_HERE",
+    "instagram_access_token": "YOUR_INSTAGRAM_ACCESS_TOKEN_HERE",
+    "verace_token": "YOUR_VERACE_TOKEN_HERE"
+  },
+  "discord": {
+    "studio_centros_bot_token": "YOUR_DISCORD_BOT_TOKEN_HERE",
+    "guild_id": "YOUR_DISCORD_GUILD_ID_HERE"
+  },
+  "youtube": {
+    "stream_key": "YOUR_YOUTUBE_STREAM_KEY_HERE",
+    "channel_id": "YOUR_YOUTUBE_CHANNEL_ID_HERE"
+  },
+  "kick": {
+    "client_id": "YOUR_KICK_CLIENT_ID_HERE",
+    "client_secret": "YOUR_KICK_CLIENT_SECRET_HERE"
+  },
+  "telegram": {
+    "eros_bot_token": "YOUR_TELEGRAM_BOT_TOKEN_HERE",
+    "chat_id": "YOUR_TELEGRAM_CHAT_ID_HERE"
+  }
+}
+```
 
-github:
-  token: "YOUR_TOKEN_HERE"
+---
 
-database:
-  host: "localhost"
-  port: 5432
-  name: "loq_dev"
-  user: "loq"
-  password: "YOUR_PASSWORD_HERE"
+## Using Tokens from EROS
+
+EROS (`/home/ciroautuori/Scrivania/eros/.env`) contains all your API keys. To use them in LOQ:
+
+### Step 1: Copy the template
+
+```bash
+cp config/secrets.json.example config/secrets.json
+```
+
+### Step 2: Copy tokens from EROS .env
+
+Open EROS secrets file:
+```bash
+nano /home/ciroautuori/Scrivania/eros/.env
+```
+
+Copy the relevant tokens to `config/secrets.json`:
+- `NVIDIA_API_KEY` → `openvidia.api_key`
+- `CLOUDFLARE_API_TOKEN` → `cloudflare.api_token`
+- `GOOGLE_PLACES_API_KEY` → `google.places_api_key`
+- `META_ADS_ACCESS_TOKEN` → `meta_ads.access_token`
+- etc.
+
+### Step 3: Protect the file
+
+```bash
+# Add to .gitignore (already done)
+echo "config/secrets.json" >> .gitignore
+```
+
+### Step 4: Set environment variables (alternative)
+
+```bash
+# Load from secrets.json
+export $(jq -r 'to_entries|map("\(.key)=\(.value)")|.[]' config/secrets.json)
 ```
 
 ---

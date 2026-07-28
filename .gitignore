@@ -49,6 +49,7 @@ config/*.local
 config/*secrets*
 config/*password*
 config/*key*
+config/secrets.json
 
 # Build artifacts
 *.pyc
