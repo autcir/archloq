@@ -132,14 +132,12 @@ export OD_DAEMON_URL=http://127.0.0.1:17456
 
 # EROS CLI — TypeScript fork (apps/cli/)
 alias eros='node /home/ciroautuori/Scrivania/eros/apps/cli/bin/eros --dangerously-skip-permissions'
-# NVIDIA NIM API keys (da CREDENZIALI.md)
-# removed (keys now only in OpenVidia app): export NVIDIA_API_KEY="nvapi-RIMOSSA"
-# removed (keys now only in OpenVidia app): export NVIDIA_API_KEY_1="nvapi-RIMOSSA"
-# removed (keys now only in OpenVidia app): export NVIDIA_API_KEY_2="nvapi-RIMOSSA"
-# removed (keys now only in OpenVidia app): export NVIDIA_API_KEY_3="nvapi-RIMOSSA"
+# NVIDIA NIM API keys - USE ENVIRONMENT VARIABLES INSTEAD
+# export NVIDIA_API_KEY="nvapi-RIMOSSA"
 
-export CLOUDFLARE_API_TOKEN="RIMOSSO"
-export CLOUDFLARE_ACCOUNT_ID="RIMOSSO"
+# Cloudflare - USE ~/.config/cloudflare/.env INSTEAD
+# export CLOUDFLARE_API_TOKEN="RIMOSSO"
+# export CLOUDFLARE_ACCOUNT_ID="RIMOSSO"
 
 # Convert any video to mp4: `toMP4 file.webm` o `toMP4 *.webm`
 toMP4() {
