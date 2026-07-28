@@ -2,7 +2,9 @@
 
 [![Arch Linux](https://img.shields.io/badge/Arch_Linux-1793D1?style=for-the-badge&logo=arch-linux&logoColor=white)](https://archlinux.org/)
 [![Lenovo LOQ](https://img.shields.io/badge/Lenovo_LOQ-Yellow?style=for-the-badge)]()
-[![NVIDIA Blackwell](https://img.shields.io/badge/NVIDIA-Blackwell-sm_120-blue)]()
+[![NVIDIA Blackwell](https://img.shields.io/badge/NVIDIA-Blackwell_sm__120-76B900?style=for-the-badge&logo=nvidia&logoColor=white)]()
+[![CI](https://github.com/ciroautuori/archloq/actions/workflows/ci.yml/badge.svg)](https://github.com/ciroautuori/archloq/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 Complete setup for Lenovo LOQ 17IRX10 (i7-13700HX + RTX 5060 Laptop 8GB) on Arch Linux.
 
@@ -37,11 +39,25 @@ Complete setup for Lenovo LOQ 17IRX10 (i7-13700HX + RTX 5060 Laptop 8GB) on Arch
 ## Quick Start
 
 ```bash
-# Run modular installer
-sudo bash install-scripts/pacmaster.sh
+git clone https://github.com/ciroautuori/archloq.git
+cd archloq
 
-# Or follow the installation guide
-docs/INSTALLATION.md
+# 1. Review the config first — these scripts run as root
+$EDITOR config/loq.conf
+
+# 2. Run the modular installer
+sudo ./install-scripts/pacmaster.sh
+```
+
+> **Read before running.** Every script here modifies system-level settings
+> (kernel modules, power, undervolt, fan curves) and is tuned for the exact
+> hardware listed above. Review anything you run as root, and make sure you
+> have a way back — see [docs/INSTALLATION.md](docs/INSTALLATION.md).
+
+Optional — fetch the upstream reference repos (llama.cpp, ollama, open-webui):
+
+```bash
+./runtime/fetch-runtime.sh
 ```
 
 ## Configuration
@@ -65,8 +81,15 @@ LOQ_GPU_MODE="hybrid"  # hybrid, intel, nvidia
 ## Repository Structure
 
 ```
-loq/
+archloq/
 ├── README.md
+├── LICENSE
+├── CONTRIBUTING.md
+├── SECURITY.md
+├── .github/
+│   ├── workflows/ci.yml          # shellcheck, syntax, exec bits, secret scan
+│   ├── ISSUE_TEMPLATE/
+│   └── pull_request_template.md
 ├── docs/
 │   ├── INSTALLATION.md
 │   ├── POWER_MANAGEMENT.md
@@ -76,25 +99,24 @@ loq/
 │   ├── LLM_STACK.md
 │   └── SECRETS.md
 ├── config/
-│   ├── loq.conf
+│   ├── loq.conf                  # main configuration
 │   ├── tlp.d/
 │   ├── modprobe.d/
-│   └── legion_linux/
-├── scripts/
-│   ├── loq-mode
-│   ├── loq-power-apply
-│   ├── loq-power-diag
-│   └── unlock-secrets.sh
+│   ├── legion_linux/
+│   └── applications/
+├── scripts/                      # loq-mode, loq-power-apply, loq-power-diag, ...
 ├── install-scripts/
-│   ├── pacmaster.sh
-│   ├── config/loq.conf
+│   ├── pacmaster.sh              # entrypoint
 │   ├── lib/utils.sh
-│   └── app/01_*_nvidia.sh ...
-├── runtime/
-├── manage/
-│   └── loq-backup.sh
-└── dotfiles/
+│   └── app/01_*.sh ... 99_*.sh
+├── optimize/                     # sysctl, journald, udev, Wayland env
+├── manage/loq-backup.sh
+├── dotfiles/                     # Catppuccin/OneDark, zsh, nvim, konsole, ...
+└── runtime/                      # upstream reference clones (NOT tracked)
+    ├── README.md
+    └── fetch-runtime.sh          # clone/update them on demand
 ```
+
 
 ## Secrets Management
 
@@ -106,6 +128,11 @@ Use `docs/SECRETS.md` for:
 - GitHub Actions Secrets
 - Template files
 
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md). Security issues: please follow
+[SECURITY.md](SECURITY.md) rather than opening a public issue.
+
 ## License
 
-MIT - See LICENSE file
+MIT — see [LICENSE](LICENSE).
