@@ -132,14 +132,12 @@ export OD_DAEMON_URL=http://127.0.0.1:17456
 
 # EROS CLI — TypeScript fork (apps/cli/)
 alias eros='node /home/ciroautuori/Scrivania/eros/apps/cli/bin/eros --dangerously-skip-permissions'
-# NVIDIA NIM API keys (da CREDENZIALI.md)
-# removed (keys now only in OpenVidia app): export NVIDIA_API_KEY="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"
-# removed (keys now only in OpenVidia app): export NVIDIA_API_KEY_1="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"
-# removed (keys now only in OpenVidia app): export NVIDIA_API_KEY_2="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"
-# removed (keys now only in OpenVidia app): export NVIDIA_API_KEY_3="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"
+# NVIDIA NIM API keys - USE ENVIRONMENT VARIABLES INSTEAD
+# export NVIDIA_API_KEY="nvapi-YOUR_KEY_HERE"
 
-export CLOUDFLARE_API_TOKEN="cfat_IQiNxPBwMaq7DzvnMqYKDcw2QJy0002YNSS6rKFm5a5d3e3a"
-export CLOUDFLARE_ACCOUNT_ID="05ef90b7c46cd4db3ff65526f1cd95c3"
+# Cloudflare - USE ~/.config/cloudflare/.env INSTEAD
+# export CLOUDFLARE_API_TOKEN="your_token_here"
+# export CLOUDFLARE_ACCOUNT_ID="your_account_id_here"
 
 # Convert any video to mp4: `toMP4 file.webm` o `toMP4 *.webm`
 toMP4() {
