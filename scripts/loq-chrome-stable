@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Chrome Wayland currently logs EGL/Ozone shared-image errors on this hybrid LOQ.
+# XWayland is less fancy, but avoids the broken pixmap path and keeps the UI usable.
+export LIBVA_DRIVER_NAME=iHD
+unset NVD_BACKEND
+
+exec "$HOME/.local/bin/loq-safe-env" /usr/bin/google-chrome-stable \
+  --ozone-platform=x11 \
+  --use-gl=desktop \
+  --disable-features=Vulkan,RawDraw,CanvasOopRasterization \
+  "$@"

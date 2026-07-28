@@ -1,0 +1,12 @@
+{
+  "name": "loop-tracker",
+  "version": "1.0.0",
+  "description": "Tracciamento di loop di lavoro (LOOP-*) e handoff di sessione (HANDOFF-*) con archiviazione automatica, verifica di integrità referenziale e rollback su fallimento. Aggiorna automaticamente ROADMAP.md e HISTORY.md.",
+  "author": {
+    "name": "Ciro Autuori",
+    "url": "https://github.com/ciroautuori"
+  },
+  "homepage": "https://github.com/studiocentos/loop-tracker",
+  "license": "MIT",
+  "keywords": ["workflow", "documentation", "session-handoff", "task-tracking"]
+}

@@ -1,0 +1,76 @@
+# Secrets - NEVER COMMIT THESE
+*.key
+*.pem
+*.secret
+secrets/
+*.gpg
+*.gpg.bak
+
+# SSH keys
+~/.ssh/id_rsa
+~/.ssh/id_ed25519
+~/.ssh/config
+~/.ssh/*.pub
+
+# Environment files with secrets
+.env
+.env.local
+*.env
+
+# Chrome/Brave logins
+~/.config/google-chrome/Default/Login Data
+~/.config/BraveSoftware/Brave-Browser/Default/Login Data
+~/.config/google-chrome/Default/Cookies
+~/.config/google-chrome/Default/Web Data
+
+# Claude config - keep example only
+~/.claude.json
+!.claude.json.example
+
+# AI API keys
+openvidia_keys/
+~/.config/openvidia/keys.json
+~/.config/openvidia/accounts.json
+
+# GPG keys backup
+gnupg/backup/
+~/.gnupg/private-keys*
+
+# Docker secrets
+~/.docker/config.json
+
+# Keep examples but not real files
+!*.example
+!*_template
+!*_sample
+
+# Local configs with secrets
+config/*.local
+config/*secrets*
+config/*password*
+config/*key*
+
+# Build artifacts
+*.pyc
+__pycache__/
+*.pyc
+
+# IDE
+.vscode/
+.idea/
+
+# Backup files
+*.bak
+*.bak-loq
+*.loq-bak
+
+# Temporary files
+*.tmp
+*.swp
+*~
+
+# Logs
+*.log
+
+# Shell snapshots
+~/.claude/shell-snapshots/

@@ -1,0 +1,18 @@
+{
+  "openvidia": {
+    "api_key": "YOUR_API_KEY_HERE",
+    "endpoint": "https://api.openvidia.ai/v1"
+  },
+  "anthropic": {
+    "api_key": "YOUR_API_KEY_HERE"
+  },
+  "openai": {
+    "api_key": "YOUR_API_KEY_HERE"
+  },
+  "google": {
+    "api_key": "YOUR_API_KEY_HERE"
+  },
+  "github": {
+    "token": "YOUR_GITHUB_TOKEN_HERE"
+  }
+}

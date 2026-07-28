@@ -1,0 +1,23 @@
+# Binary files
+*.zip binary
+*.tar.gz binary
+*.tar.bz2 binary
+*.tar.xz binary
+*.tar.zst binary
+
+# Text files
+*.sh text eol=lf
+*.bash text eol=lf
+
+# Config files
+*.conf text eol=lf
+*.ini text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+
+# Markdown
+*.md text eol=lf
+
+# Shell scripts
+*.sh text eol=lf
+*.zsh text eol=lf
