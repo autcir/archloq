@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+device="${1:-/dev/input/event5}"
+
+if [[ ! -r "$device" ]]; then
+  echo "Cannot read $device. Check input group permissions or run with sudo." >&2
+  exit 1
+fi
+
+echo "Listening on $device for 12 seconds."
+echo "Click left, middle wheel, right, then scroll."
+
+timeout 12s perl -Mstrict -Mwarnings -e '
+  use constant EV_KEY => 0x01;
+  use constant EV_REL => 0x02;
+  my %key = (
+    0x110 => "BTN_LEFT",
+    0x111 => "BTN_RIGHT",
+    0x112 => "BTN_MIDDLE",
+    0x113 => "BTN_SIDE",
+    0x114 => "BTN_EXTRA",
+  );
+  my %rel = (
+    0x00 => "REL_X",
+    0x01 => "REL_Y",
+    0x08 => "REL_WHEEL",
+    0x0b => "REL_WHEEL_HI_RES",
+    0x06 => "REL_HWHEEL",
+    0x0c => "REL_HWHEEL_HI_RES",
+  );
+  open my $fh, "<:raw", $ARGV[0] or die "open: $!\n";
+  my $buf;
+  while (read($fh, $buf, 24) == 24) {
+    my ($sec, $usec, $type, $code, $value) = unpack("q q S S l", $buf);
+    if ($type == EV_KEY && exists $key{$code}) {
+      my $state = $value ? "down" : "up";
+      print "$key{$code} $state\n";
+    } elsif ($type == EV_REL && exists $rel{$code}) {
+      print "$rel{$code} $value\n";
+    }
+  }
+' "$device"

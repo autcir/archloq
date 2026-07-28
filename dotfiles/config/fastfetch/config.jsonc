@@ -1,0 +1,38 @@
+// Fastfetch config — Catppuccin Mocha
+// https://catppuccin.com/palette/ (Mocha)
+// user=mauve #cba6f7  at=overlay0 #6c7086  host=blue #89b4fa
+{
+  "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
+  "logo": {
+    "source": "arch",
+    "color": { "1": "blue" }
+  },
+  "display": {
+    "separator": " → ",
+    "color": "blue"
+  },
+  "modules": [
+    {
+      "type": "title",
+      "color": { "user": "magenta", "at": "bright_black", "host": "cyan" }
+    },
+    { "type": "separator", "string": "─", "color": "cyan" },
+    { "type": "os",          "key": "󰣇 OS",       "keyColor": "blue" },
+    { "type": "kernel",      "key": " Kernel",   "keyColor": "blue" },
+    { "type": "uptime",      "key": "󰔚 Uptime",   "keyColor": "green" },
+    { "type": "packages",    "key": "󰏗 Packages", "keyColor": "green" },
+    { "type": "shell",       "key": " Shell",    "keyColor": "yellow" },
+    { "type": "wm",          "key": " WM",       "keyColor": "yellow" },
+    { "type": "terminal",    "key": " Terminal", "keyColor": "cyan" },
+    { "type": "cpu",         "key": " CPU",      "keyColor": "red" },
+    { "type": "gpu",         "key": "󰍛 GPU",      "keyColor": "red" },
+    { "type": "memory",      "key": " Memory",   "keyColor": "magenta" },
+    { "type": "swap",        "key": "󰾴 Swap",     "keyColor": "magenta" },
+    { "type": "disk",        "key": "󰋊 Disk",     "keyColor": "blue" },
+    { "type": "display",     "key": " Display",  "keyColor": "cyan" },
+    { "type": "battery",     "key": "󰁹 Battery",  "keyColor": "green" },
+    { "type": "poweradapter","key": "󱐋 Power",    "keyColor": "green" },
+    { "type": "break" },
+    { "type": "colors", "symbol": "circle" }
+  ]
+}

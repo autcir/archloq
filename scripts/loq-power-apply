@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ac_online=0
+for ac in /sys/class/power_supply/AC*/online /sys/class/power_supply/ADP*/online; do
+  [[ -r "$ac" ]] || continue
+  if [[ "$(cat "$ac")" == "1" ]]; then
+    ac_online=1
+    break
+  fi
+done
+
+if [[ "$ac_online" == "1" ]]; then
+  /usr/local/bin/loq-mode performance >/dev/null 2>&1 || true
+else
+  /usr/local/bin/loq-mode battery >/dev/null 2>&1 || true
+fi
+
+for dev in /sys/bus/pci/devices/0000:01:00.0 /sys/bus/pci/devices/0000:01:00.1; do
+  [[ -w "$dev/power/control" ]] && echo auto >"$dev/power/control" || true
+done

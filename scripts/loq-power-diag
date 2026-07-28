@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+set -u
+
+echo "== Power source =="
+for f in /sys/class/power_supply/AC*/online /sys/class/power_supply/ADP*/online; do
+  [[ -r "$f" ]] && echo "$f=$(cat "$f")"
+done
+
+echo
+echo "== Battery =="
+upower -i /org/freedesktop/UPower/devices/battery_BAT1 2>/dev/null \
+  | grep -E "state|energy:|energy-full|energy-rate|percentage|capacity|time to empty|time to full" || true
+
+echo
+echo "== CPU =="
+echo "profile=$(cat /sys/firmware/acpi/platform_profile 2>/dev/null || true)"
+echo "turbo_no=$(cat /sys/devices/system/cpu/intel_pstate/no_turbo 2>/dev/null || true)"
+echo "max_perf_pct=$(cat /sys/devices/system/cpu/intel_pstate/max_perf_pct 2>/dev/null || true)"
+cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor 2>/dev/null | sort | uniq -c || true
+
+echo
+echo "== NVIDIA =="
+nvidia-smi --query-gpu=pstate,power.draw,power.limit,temperature.gpu --format=csv,noheader,nounits 2>/dev/null || true
+for f in /sys/bus/pci/devices/0000:01:00.0/power/runtime_status /sys/bus/pci/devices/0000:01:00.0/power/control; do
+  [[ -r "$f" ]] && echo "$f=$(cat "$f")"
+done
+
+echo
+echo "== Video acceleration env =="
+echo "-- current shell --"
+printenv | grep -E "^(LIBVA_DRIVER_NAME|NVD_BACKEND|MOZ_ENABLE_WAYLAND)=" || true
+echo "-- new GUI apps --"
+systemctl --user show-environment 2>/dev/null | grep -E "^(LIBVA_DRIVER_NAME|NVD_BACKEND|MOZ_ENABLE_WAYLAND)=" || true
+echo "-- recent VAAPI errors --"
+journalctl -b --no-pager 2>/dev/null | grep -E "libva error|nvidia_drv_video|VA-API|VAAPI" | tail -n 8 || true
+
+echo
+echo "== Processes keeping NVIDIA awake =="
+lsof /dev/nvidia* 2>/dev/null | awk 'NR==1 || !seen[$1 ":" $2]++ {print}' || true
+
+echo
+echo "== Fans and temps =="
+sensors 2>/dev/null | grep -E "Fan|Package|Core 0|CPU Temperature|GPU Temperature|Composite" || true
+
+echo
+echo "== Top CPU =="
+ps -eo pid,comm,%cpu,%mem --sort=-%cpu | head -n 12

@@ -1,0 +1,159 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  cat <<'EOF'
+Usage:
+  loq-mode battery
+  loq-mode work
+  loq-mode performance
+  loq-mode battery-safe-apps
+  loq-mode status
+
+Profiles:
+  battery      Minimum power while keeping Docker and IDEs usable.
+  work         Balanced daily work profile.
+  performance AC/high-performance profile.
+  battery-safe-apps
+              Battery profile plus guidance for safe IDE/browser launchers.
+  status       Show current state and NVIDIA blockers.
+EOF
+}
+
+require_root_for_write() {
+  if [[ ${EUID} -ne 0 ]]; then
+    exec sudo "$0" "$@"
+  fi
+}
+
+write_if_writable() {
+  local value="$1"
+  local path="$2"
+  [[ -w "$path" ]] && echo "$value" >"$path" || true
+}
+
+begin_apply() {
+  echo "$$" >/run/loq-mode-applying
+  trap 'rm -f /run/loq-mode-applying' EXIT
+}
+
+set_cpu_max() {
+  write_if_writable "$1" /sys/devices/system/cpu/intel_pstate/max_perf_pct
+}
+
+set_turbo() {
+  # 1 means no turbo, 0 means turbo enabled.
+  write_if_writable "$1" /sys/devices/system/cpu/intel_pstate/no_turbo
+}
+
+set_platform_profile() {
+  write_if_writable "$1" /sys/firmware/acpi/platform_profile
+}
+
+set_lenovo_powermode() {
+  # WMI power mode values:
+  # 1 = quiet/blue, 2 = balanced/white, 3 = performance/red.
+  local mode="$1"
+  for path in \
+    /sys/module/legion_laptop/drivers/platform:legion/PNP0C09:00/powermode \
+    /sys/devices/pci0000:00/0000:00:1f.0/PNP0C09:00/powermode; do
+    write_if_writable "$mode" "$path"
+  done
+}
+
+set_nvidia_runtime_pm() {
+  for dev in /sys/bus/pci/devices/0000:01:00.0 /sys/bus/pci/devices/0000:01:00.1; do
+    write_if_writable auto "$dev/power/control"
+  done
+}
+
+set_wifi_power() {
+  local mode="$1"
+  command -v iw >/dev/null 2>&1 || return 0
+  for iface in /sys/class/net/wl*; do
+    [[ -d "$iface" ]] || continue
+    iw dev "$(basename "$iface")" set power_save "$mode" >/dev/null 2>&1 || true
+  done
+}
+
+set_charge_type() {
+  local type="$1"
+  for bat in /sys/class/power_supply/BAT*; do
+    [[ -w "$bat/charge_control_end_threshold" ]] && continue
+    [[ -w "$bat/charge_type" ]] && echo "$type" >"$bat/charge_type" || true
+  done
+}
+
+status() {
+  loq-power-diag
+}
+
+mode="${1:-status}"
+
+case "$mode" in
+  status)
+    status
+    ;;
+
+  battery)
+    require_root_for_write "$@"
+    begin_apply
+    tlp bat || true
+    set_platform_profile quiet
+    set_lenovo_powermode 1
+    set_turbo 1
+    set_cpu_max 45
+    set_nvidia_runtime_pm
+    set_wifi_power on
+    set_charge_type Long_Life
+    echo "Applied LOQ battery mode."
+    status
+    ;;
+
+  work)
+    require_root_for_write "$@"
+    begin_apply
+    if grep -q 1 /sys/class/power_supply/AC*/online /sys/class/power_supply/ADP*/online 2>/dev/null; then
+      tlp ac || true
+    else
+      tlp bat || true
+    fi
+    set_platform_profile balanced
+    set_lenovo_powermode 2
+    set_turbo 0
+    set_cpu_max 70
+    set_nvidia_runtime_pm
+    set_wifi_power off
+    set_charge_type Standard
+    echo "Applied LOQ work mode."
+    status
+    ;;
+
+  performance)
+    require_root_for_write "$@"
+    begin_apply
+    tlp ac || true
+    set_platform_profile performance
+    set_lenovo_powermode 3
+    set_turbo 0
+    set_cpu_max 100
+    set_nvidia_runtime_pm
+    set_wifi_power off
+    set_charge_type Standard
+    echo "Applied LOQ performance mode."
+    status
+    ;;
+
+  battery-safe-apps)
+    require_root_for_write "$@"
+    "$0" battery
+    echo
+    echo "For best battery while keeping IDE/browser open, close current Chrome/Code/Zed windows"
+    echo "and reopen them with: chrome-battery, code-battery, zed-battery."
+    ;;
+
+  *)
+    usage >&2
+    exit 2
+    ;;
+esac
