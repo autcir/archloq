@@ -1,6 +1,24 @@
 # Runtime Repositories
 
-This directory contains cloned repositories for Lenovo LOQ setup.
+This directory holds upstream reference repositories used while setting up the
+Lenovo LOQ.
+
+**These clones are not tracked by archloq.** They are third-party sources
+totalling ~9,800 files; vendoring them would bloat the repo, and tracking them
+as submodules previously left every fresh clone with empty directories. Fetch
+them on demand instead:
+
+```bash
+# All of them
+./runtime/fetch-runtime.sh
+
+# Or just one
+./runtime/fetch-runtime.sh llama.cpp
+```
+
+The script is safe to re-run: existing clones are updated rather than
+re-cloned. Nothing else in archloq requires `runtime/` to be present — the
+configs and install scripts are self-contained.
 
 ## Repositories (9 total)
 
@@ -23,7 +41,7 @@ This directory contains cloned repositories for Lenovo LOQ setup.
 
 | Repo | Purpose |
 |------|---------|
-| `rtx5060-setup/` | CUDA/PyTorch guide for Blackwell sm_120 |
+| `rtx5060-setup/` | CUDA/PyTorch guide for Blackwell sm_120 (ships with archloq) |
 | `ollama/` | Local LLM runtime |
 | `llama.cpp/` | GPU-accelerated inference |
 | `open-webui/` | Web UI for models |
@@ -39,10 +57,7 @@ These are reference repositories. The actual configs are integrated into:
 ## Keeping Updated
 
 ```bash
-# Update all repos
-for dir in */; do
-    (cd "$dir" && git pull)
-done
+./runtime/fetch-runtime.sh
 ```
 
 ## Why These Repos?
