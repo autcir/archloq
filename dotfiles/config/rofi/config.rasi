@@ -1,0 +1,98 @@
+/* Rofi — Catppuccin Mocha · ArchLOQ */
+
+configuration {
+    modi: "drun,run,window,cliphist";
+    show-icons: true;
+    icon-theme: "Papirus-Dark";
+    terminal: "ghostty";
+    font: "Hack Nerd Font Mono 14";
+    display-drun: " Apps";
+    display-run: " Run";
+    display-window: " Windows";
+    display-cliphist: " Clipboard";
+    drun-display-format: "{name}";
+    hover-select: true;
+    me-select-entry: "";
+    me-accept-entry: "MousePrimary";
+}
+
+* {
+    bg:       #1e1e2e;
+    bg-alt:   #313244;
+    fg:       #cdd6f4;
+    fg-alt:   #a6adc8;
+    accent:   #89b4fa;
+    urgent:   #f38ba8;
+    spacing:  0;
+}
+
+window {
+    width:            600px;
+    background-color: @bg;
+    border:           2px solid;
+    border-color:     @accent;
+    border-radius:    12px;
+    padding:          20px;
+}
+
+inputbar {
+    children:         [ prompt, entry ];
+    background-color: @bg;
+    padding:          8px 12px;
+    border-radius:    8px;
+    margin-bottom:    12px;
+}
+
+prompt {
+    background-color: @accent;
+    text-color:       @bg;
+    padding:          6px 12px;
+    border-radius:    6px;
+    margin-right:     10px;
+    font-weight:      bold;
+}
+
+entry {
+    placeholder:      "Cerca...";
+    placeholder-color:@fg-alt;
+    text-color:       @fg;
+    font-size:        16px;
+}
+
+listview {
+    lines:            8;
+    columns:          1;
+    fixed-height:     true;
+    background-color: @bg;
+    scrollbar:        false;
+}
+
+element {
+    padding:          8px 12px;
+    border-radius:    6px;
+    text-color:       @fg;
+}
+
+element selected.normal {
+    background-color: @accent;
+    text-color:       @bg;
+}
+
+element active {
+    text-color:       @accent;
+}
+
+element urgent {
+    text-color:       @urgent;
+}
+
+message {
+    background-color: @bg;
+    padding:          8px 12px;
+    border-top:       1px solid @bg-alt;
+}
+
+textbox {
+    text-color:       @fg;
+    font-size:        14px;
+}

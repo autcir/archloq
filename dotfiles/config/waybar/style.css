@@ -1,0 +1,134 @@
+/* Waybar — Catppuccin Mocha · ArchLOQ */
+
+* {
+    border: none;
+    border-radius: 0;
+    font-family: "Hack Nerd Font Mono";
+    font-size: 13px;
+    min-height: 0;
+}
+
+window#waybar {
+    background: rgba(30, 30, 46, 0.85);
+    color: #cdd6f4;
+    border-bottom: 2px solid #45475a;
+    border-radius: 10px;
+}
+
+/* --- Workspaces --- */
+#workspaces button {
+    padding: 0 8px;
+    color: #6c7086;
+    border-radius: 8px;
+    margin: 4px 2px;
+    transition: all 0.3s ease;
+}
+
+#workspaces button.active {
+    color: #1e1e2e;
+    background: #89b4fa;
+    border-radius: 8px;
+}
+
+#workspaces button:hover {
+    background: #45475a;
+    color: #cdd6f4;
+}
+
+/* --- Window --- */
+#window {
+    color: #a6e3a1;
+    padding: 0 10px;
+}
+
+/* --- Clock --- */
+#clock {
+    color: #89b4fa;
+    font-weight: bold;
+    padding: 0 12px;
+}
+
+/* --- CPU --- */
+#cpu {
+    color: #f9e2af;
+    padding: 0 8px;
+}
+
+/* --- Memory --- */
+#memory {
+    color: #fab387;
+    padding: 0 8px;
+}
+
+/* --- Pulseaudio --- */
+#pulseaudio {
+    color: #cba6f7;
+    padding: 0 8px;
+}
+
+#pulseaudio.muted {
+    color: #6c7086;
+}
+
+/* --- Network --- */
+#network {
+    color: #94e2d5;
+    padding: 0 8px;
+}
+
+#network.disconnected {
+    color: #f38ba8;
+}
+
+/* --- Battery --- */
+#battery {
+    color: #a6e3a1;
+    padding: 0 8px;
+}
+
+#battery.warning {
+    color: #f9e2af;
+}
+
+#battery.critical {
+    color: #f38ba8;
+    animation: blink 1s linear infinite;
+}
+
+@keyframes blink {
+    to {
+        color: #1e1e2e;
+        background: #f38ba8;
+    }
+}
+
+/* --- Tray --- */
+#tray {
+    padding: 0 8px;
+}
+
+#tray > passive {
+    -gtk-icon-effect: dim;
+}
+
+#tray > needs-attention {
+    -gtk-icon-effect: highlight;
+}
+
+/* --- Cliphist --- */
+#cliphist {
+    color: #f5c2e7;
+    padding: 0 8px;
+}
+
+/* --- Power --- */
+#custom-power {
+    color: #f38ba8;
+    padding: 0 12px;
+    font-size: 16px;
+}
+
+#custom-power:hover {
+    background: #f38ba8;
+    color: #1e1e2e;
+}
