@@ -33,8 +33,16 @@ confirm() {
 
 say "============================================"
 say "  Catppuccin Mocha Rice — Lenovo LOQ 17IRX10"
-say "  KDE Plasma 6.7 + Wayland"
+say "  KDE Plasma 6.7 + Hyprland"
 say "============================================"
+echo ""
+echo "  Scegli la sezione da installare:"
+echo "    [K] DE Plasma (default)"
+echo "    [H] Hyprland"
+echo "    [A] Tutta (KDE + Hyprland)"
+echo ""
+read -p "Scelta [K/H/A]: " CHOICE
+CHOICE=${CHOICE:-K}
 echo ""
 
 # --- FASE 0: Prerequisiti ----------------------------------------------------
@@ -85,18 +93,34 @@ if [ -n "$ONLY" ] && [ "$ONLY" != "05" ]; then skip; else
   confirm "Mostrare widget opzionali?" && bash "$HERE/scripts/05-plasma-widgets.sh"
 fi
 
+# --- FASE H: Hyprland (opzionale) -------------------------------------------
+if [[ "$CHOICE" =~ ^[HhAa]$ ]]; then
+    say "FASE H: Installazione Hyprland"
+    bash "$HERE/../install-scripts/install-hyprland.sh"
+fi
+
 # --- Fine -------------------------------------------------------------------
 echo ""
 ok "============================================"
 ok "  Rice Catppuccin Mocha installato!"
 ok "============================================"
 echo ""
-echo "  Prossimi passi manuali:"
-echo "    1. Riavvia shell: exec zsh"
-echo "    2. Imposta wallpaper: bash $HERE/scripts/11-wallpaper-catppuccin.sh"
-echo "    3. Installa icone:    bash $HERE/scripts/09-icons-papirus.sh"
-echo "    4. Installa GTK:      bash $HERE/scripts/10-gtk-catppuccin.sh"
-echo "    5. Verifica visiva:   bash $HERE/scripts/verify-catppuccin.sh"
+if [[ "$CHOICE" =~ ^[Hh]$ ]]; then
+    echo "  Hyprland installato!"
+    echo "  Per avviare: Hyprland da terminale"
+    echo "  Hotkeys: SUPER+Return (term), SUPER+D (menu), SUPER+Q (close)"
+elif [[ "$CHOICE" =~ ^[Kk]$ ]]; then
+    echo "  KDE Plasma installato!"
+    echo "  Riavvia shell: exec zsh"
+    echo "  Imposta wallpaper: bash $HERE/scripts/11-wallpaper-catppuccin.sh"
+    echo "  Installa icone:    bash $HERE/scripts/09-icons-papirus.sh"
+    echo "  Installa GTK:      bash $HERE/scripts/10-gtk-catppuccin.sh"
+    echo "  Verifica visiva:   bash $HERE/scripts/verify-catppuccin.sh"
+else
+    echo "  Tutte le sezioni installate!"
+    echo "  KDE Plasma: seleziona Plasma dal display manager"
+    echo "  Hyprland: seleziona Hyprland dal display manager"
+fi
 echo ""
 echo "  Per rollback: bash $HERE/scripts/99-rollback.sh"
 echo ""
