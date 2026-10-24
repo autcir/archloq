@@ -9,7 +9,9 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$(dirname "$SCRIPT_DIR")"
+# I comandi git-crypt agiscono sul repo corrente: parti dalla root del repo,
+# così lo script funziona da qualunque directory venga lanciato.
+cd "$SCRIPT_DIR/.."
 
 echo "🔓 Decifrando i segreti..."
 

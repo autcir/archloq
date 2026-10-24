@@ -7,8 +7,6 @@ say()  { printf '\n\033[1;36m[INFO]\033[0m %s\n' "$*"; }
 ok()   { printf '\033[1;32m[OK]\033[0m  %s\n' "$*"; }
 skip() { printf '\033[1;33m[SKIP]\033[0m %s\n' "$*"; }
 
-HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DOTROOT="$(cd "$HERE/.." && pwd)"
 
 # --- pacman packages --------------------------------------------------------
 PAC_PKGS=(git base-devel stow)
