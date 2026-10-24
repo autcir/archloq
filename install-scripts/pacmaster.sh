@@ -8,11 +8,14 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=install-scripts/lib/utils.sh
 source "$SCRIPT_DIR/lib/utils.sh"
 
 # Default configuration
 CONFIG_FILE="${CONFIG_FILE:-$SCRIPT_DIR/config/loq.conf}"
+# shellcheck source=/dev/null
 [[ -f "$CONFIG_FILE.local" ]] && source "$CONFIG_FILE.local"
+# shellcheck source=/dev/null
 [[ -f "$CONFIG_FILE" ]] && source "$CONFIG_FILE"
 
 # Colors
@@ -22,10 +25,10 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
-say() { printf '\n${BLUE}==>${NC} %s\n' "$*"; }
-ok() { printf '  ${GREEN}✓${NC} %s\n' "$*"; }
-warn() { printf '  ${YELLOW}!${NC} %s\n' "$*"; }
-error() { printf '  ${RED}✗${NC} %s\n' "$*"; }
+say() { printf '\n%b==>%b %s\n' "$BLUE" "$NC" "$*"; }
+ok() { printf '  %b✓%b %s\n' "$GREEN" "$NC" "$*"; }
+warn() { printf '  %b!%b %s\n' "$YELLOW" "$NC" "$*"; }
+error() { printf '  %b✗%b %s\n' "$RED" "$NC" "$*"; }
 
 # Check if running as root
 check_root() {

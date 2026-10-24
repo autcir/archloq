@@ -25,8 +25,6 @@ ok()   { printf '\033[1;32m[OK]\033[0m  %s\n' "$*"; }
 skip() { printf '\033[1;33m[SKIP]\033[0m %s\n' "$*"; }
 warn() { printf '\033[1;31m[WARN]\033[0m %s\n' "$*"; }
 
-HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DOTROOT="$(cd "$HERE/.." && pwd)"
 KWINRC="$HOME/.config/kwinrc"
 KDEGLOBALS="$HOME/.config/kdeglobals"
 

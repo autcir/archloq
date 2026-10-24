@@ -29,7 +29,6 @@ mkdir -p "$CACHE"
 FLAVOUR=1   # Mocha
 ACCENT=13   # Blue
 WINDEC=2    # Classic (MacOS-like, eye-care)
-DOTROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 # --- dipendenze -------------------------------------------------------------
 say "Controllo dipendenze (wget, unzip, kpackagetool6/6, kwriteconfig6)"
