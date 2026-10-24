@@ -32,8 +32,6 @@ ok "Better Blur DX attivo, default blur disabilitato"
 # --- 3. KWin window rules: opacity per ogni app ----------------------------
 say "[3/4] KWin window rules: opacity per Dolphin, Kate, System Settings, Konsole..."
 
-# Conta regole esistenti
-EXISTING=$(kreadconfig6 --file ~/.config/kwinrulesrc --group General --key count 2>/dev/null || echo 0)
 
 # Funzione helper: aggiunge/sovrascrive regola
 add_rule() {
