@@ -1,0 +1,18 @@
+# ~/.xinitrc -- archloq
+#
+# Sourced by startx. The SDDM/X11 session runs startxfce4, not this file, so it
+# only matters for a fallback TTY login (Ctrl+Alt+F2, then `startx`).
+
+if [[ -f /etc/X11/Xresources ]]; then
+  xrdb -merge /etc/X11/Xresources
+fi
+
+export XDG_CURRENT_DESKTOP=XFCE
+export XDG_SESSION_DESKTOP=xfce
+export XDG_SESSION_TYPE=x11
+
+# GTK apps on a HiDPI panel: set this once instead of per-application.
+# export GDK_SCALE=1
+# export QT_SCALE_FACTOR=1
+
+exec startxfce4

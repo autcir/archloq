@@ -28,10 +28,10 @@ jobs:
       # `style` is too noisy to gate a merge on today.
       - name: Run shellcheck
         run: |
-          mapfile -t files < <(
-            git ls-files '*.sh'
-            git ls-files scripts/ manage/ | grep -vE '\.(md|conf)$'
-          )
+          # Every tracked shell script, wherever it lives. install-scripts/ and
+          # dotfiles/ run as root and rewrite system state, which is exactly the
+          # class of file where a quoting bug is unrecoverable.
+          mapfile -t files < <(git ls-files '*.sh')
           printf 'checking %d files\n' "${#files[@]}"
           shellcheck -S warning -e SC1091 "${files[@]}"
 
@@ -56,7 +56,7 @@ jobs:
               fail=1
               printf '::error file=%s::%s\n' "$f" "$out"
             fi
-          done < <(git ls-files '*.sh'; git ls-files scripts/ manage/)
+          done < <(git ls-files '*.sh')
           exit "$fail"
 
   permissions:
@@ -78,7 +78,7 @@ jobs:
               fail=1
               printf '::error file=%s::missing executable bit\n' "$f"
             fi
-          done < <(git ls-files '*.sh'; git ls-files scripts/ manage/)
+          done < <(git ls-files '*.sh')
           exit "$fail"
 
   secrets:
@@ -97,3 +97,35 @@ jobs:
             exit 1
           fi
           echo 'no private key material found'
+
+  archinstall-profile:
+    name: archinstall profile
+    # The profile is validated against archinstall's own parser rather than a
+    # schema file. archinstall publishes a schema.json, but it is not valid JSON
+    # upstream (a trailing comma), so validating against it would be validating
+    # against nothing. Importing archinstall and calling ArchConfig.from_config
+    # is the only check that reflects what the installer will actually accept.
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install archinstall
+        run: |
+          python3 -m venv /tmp/ai-venv
+          /tmp/ai-venv/bin/pip install --quiet --upgrade pip
+          /tmp/ai-venv/bin/pip install --quiet archinstall jsonschema
+
+      - name: Validate the profile
+        run: /tmp/ai-venv/bin/python archinstall/validate.py
+
+      - name: The committed profile must carry no credentials
+        run: |
+          # validate.py asserts this too; doing it in shell means the failure is
+          # readable in the job log without digging through Python output.
+          if grep -nE '"(!password|enc_password|root_enc_password|encryption_password|!root-password)"' \
+               archinstall/user_configuration.json; then
+            echo "::error::the committed profile contains a credential key"
+            exit 1
+          fi
+          echo "no credential keys in archinstall/user_configuration.json"

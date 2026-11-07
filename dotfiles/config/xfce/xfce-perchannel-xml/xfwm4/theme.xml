@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- xfwm4: window decorations. Assets live in dotfiles/config/xfwm4/themes/mocha. -->
+<channel name="xfwm4" version="1.0">
+  <property name="theme" type="string" value="mocha"/>
+  <property name="title_font" type="string" value="Inter Bold 9"/>
+  <property name="menu_font" type="string" value="Inter 9"/>
+  <property name="shadow_delta_height" type="int" value="0"/>
+  <property name="shadow_delta_width" type="int" value="0"/>
+  <property name="shadow_delta_x" type="int" value="0"/>
+  <property name="shadow_delta_y" type="int" value="0"/>
+  <property name="shadow_opacity" type="int" value="50"/>
+  <property name="maximized_offset" type="int" value="0"/>
+  <property name="popup_offset" type="int" value="0"/>
+  <property name="fullscreen_offset" type="int" value="0"/>
+</channel>

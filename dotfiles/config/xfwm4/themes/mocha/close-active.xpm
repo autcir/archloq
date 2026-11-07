@@ -1,0 +1,22 @@
+/* XPM */
+static char * close-active_xpm[] = {
+"16 16 2 1",
+"c c #45475a",
+"d c #f38ba8",
+" cccccccccccccccc",
+" cccccccccccccccc",
+" cccccccccccccccc",
+" cccccccccccccccc",
+" ccccdccccccdcccc",
+" cccccdccccdccccc",
+" ccccccdccdcccccc",
+" cccccccddccccccc",
+" cccccccddccccccc",
+" ccccccdccdcccccc",
+" cccccdccccdccccc",
+" ccccdccccccdcccc",
+" cccccccccccccccc",
+" cccccccccccccccc",
+" cccccccccccccccc",
+" cccccccccccccccc",
+};

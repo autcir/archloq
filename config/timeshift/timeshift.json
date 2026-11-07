@@ -1,0 +1,25 @@
+{
+  "schema_version": 2,
+  "backup_type": "BTRFS",
+  "backup_directory": "/.timeshift",
+  "use_btrfs_assistant": true,
+  "btrfs_assistant_args": "--timeshift",
+  "exclude_ignore_size": true,
+  "exclude_patterns": [
+    "/home",
+    "/var/cache/pacman/pkg",
+    "/var/cache",
+    "/var/log",
+    "/var/tmp",
+    "/dev",
+    "/proc",
+    "/sys",
+    "/run",
+    "/tmp",
+    "/mnt",
+    "/media",
+    "/.timeshift"
+  ],
+  "rsync_enabled": false,
+  "last_run": ""
+}

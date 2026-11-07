@@ -1,0 +1,22 @@
+/* XPM */
+static char * maximize-active_xpm[] = {
+"16 16 2 1",
+"c c #45475a",
+"d c #f9e2af",
+" cccccccccccccccc",
+" cccccccccccccccc",
+" cccccccccccccccc",
+" cccddddddddddccc",
+" cccdccccccccdccc",
+" cccdccccccccdccc",
+" cccdccccccccdccc",
+" cccdccccccccdccc",
+" cccdccccccccdccc",
+" cccdccccccccdccc",
+" cccdccccccccdccc",
+" cccdccccccccdccc",
+" cccddddddddddccc",
+" cccccccccccccccc",
+" cccccccccccccccc",
+" cccccccccccccccc",
+};

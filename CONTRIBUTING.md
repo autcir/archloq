@@ -58,9 +58,21 @@ Never commit credentials, keys, or `.env` files. Templates belong in
 - Explain the *why* in the description, and note any risk to the reader's
   hardware.
 
-## The `runtime/` Directory
+## The `archinstall/` Profile
 
-`runtime/` holds upstream reference clones (llama.cpp, ollama, open-webui, …).
-It is **not tracked** — it is fetched on demand, and `.gitignore` excludes it.
-Never commit its contents; if you need to reference upstream, update
-[runtime/README.md](runtime/README.md) instead.
+`archinstall/user_configuration.json` is the destructive half of the install, so
+it is checked in CI rather than reviewed by eye:
+
+```bash
+uv venv /tmp/ai-venv
+uv pip install --python /tmp/ai-venv/bin/python archinstall jsonschema
+/tmp/ai-venv/bin/python archinstall/validate.py
+```
+
+The validator imports archinstall and runs its own parser over the profile. If
+you change the partition layout, change the profile **and** the `EXPECTED` table
+in `validate.py`, and re-run it. Do not hand-edit the JSON to make a failing
+validator pass.
+
+Never commit `user_credentials.json` — only the `.example` shape. The validator
+fails if a credential key appears in the committed profile.

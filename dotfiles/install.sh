@@ -1,127 +1,167 @@
 #!/usr/bin/env bash
-# install.sh — entrypoint per il rice Catppuccin Mocha.
-# Ogni fase chiede conferma. Idempotente: rieseguibile senza rompere nulla.
+# =============================================================================
+# dotfiles — deploy to ~/.config
+# =============================================================================
+# Everything is symlinked, never copied. That is the only arrangement where
+# `git pull` in dotfiles/ takes effect without a second deploy step.
 #
-#   bash install.sh              # interattivo (conferma per fase)
-#   bash install.sh --yes        # auto-sì per tutte le fasi
-#   bash install.sh --only 03    # esegue solo la fase 03
+# Run as yourself, not as root: run by root it produces root-owned files in your
+# home, which then breaks your own edits.
+#
+#   ./install.sh            deploy
+#   ./install.sh --check    show what would change, deploy nothing
+#   ./install.sh --remove   undo exactly what this created
+# =============================================================================
+
 set -euo pipefail
 
-HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-AUTO_YES=false
-ONLY=""
+DOTFILES_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+MODE=deploy
 
-# Parse args
-for arg in "$@"; do
-  case "$arg" in
-    --yes|-y) AUTO_YES=true ;;
-    --only) shift; ONLY="${1:-}" ;;
-    *) [ -n "$ONLY" ] && ONLY="$arg" ;;
+while (($#)); do
+  case "$1" in
+    --check)  MODE=check; shift ;;
+    --remove) MODE=remove; shift ;;
+    -h|--help) sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    *) printf 'unknown argument: %s\n' "$1" >&2; exit 2 ;;
   esac
 done
 
-# Colori
-say()  { printf '\n\033[1;36m[INFO]\033[0m %s\n' "$*"; }
-ok()   { printf '\033[1;32m[OK]\033[0m  %s\n' "$*"; }
-warn() { printf '\033[1;33m[WARN]\033[0m %s\n' "$*"; }
+[[ -d "$CONFIG_HOME" ]] || { printf 'no such directory: %s\n' "$CONFIG_HOME" >&2; exit 1; }
 
-confirm() {
-  if $AUTO_YES; then return 0; fi
-  read -p "$1 [y/N] " yn
-  [[ "$yn" == [yY] ]]
+# DE-agnostic tools: straight symlink from dotfiles/config.
+DIRECT=(
+  bat btop cava fastfetch foot nvim starship zsh
+  gtk-3.0 gtk-4.0 xsettings xbindkeys
+  kvantum
+)
+
+# Xfce: the per-channel XML tree is copied, not symlinked, because xfconf
+# rewrites those files in place on every settings change and a symlinked file
+# would take the repo with it.
+COPIED=(
+  "config/xfce/xfce-perchannel-xml"
+  "config/xfwm4/themes"
+)
+
+# ~/.xinitrc lives outside .config.
+XINITRC_SRC="xinitrc"
+
+installed_manifest() { printf '%s\n' "$CONFIG_HOME/.dotfiles-manifest"; }
+
+link_target() {
+  printf '%s/%s' "$CONFIG_HOME" "$1"
 }
 
-say "============================================"
-say "  Catppuccin Mocha Rice — Lenovo LOQ 17IRX10"
-say "  KDE Plasma 6.7 + Hyprland"
-say "============================================"
-echo ""
-echo "  Scegli la sezione da installare:"
-echo "    [K] DE Plasma (default)"
-echo "    [H] Hyprland"
-echo "    [A] Tutta (KDE + Hyprland)"
-echo ""
-read -p "Scelta [K/H/A]: " CHOICE
-CHOICE=${CHOICE:-K}
-echo ""
+track() {
+  installed_manifest >>"$2" 2>/dev/null || true
+}
 
-# --- FASE 0: Prerequisiti ----------------------------------------------------
-say "FASE 0: Prerequisiti (yay, stow, konsave)"
-if [ -n "$ONLY" ] && [ "$ONLY" != "00" ]; then skip; else
-  confirm "Eseguire check prerequisiti?" && bash "$HERE/scripts/00-prereqs.sh"
-fi
+do_deploy() {
+  local manifest
+  manifest="$(installed_manifest)"
+  : >"$manifest"
 
-# --- FASE 06: Backup konsave (PRIMA di toccare nulla) -----------------------
-say "FASE 06: Backup Plasma profile (konsave)"
-if [ -n "$ONLY" ] && [ "$ONLY" != "06" ]; then skip; else
-  confirm "Eseguire backup konsave (CONSIGLIATO prima di procedere)?" && bash "$HERE/scripts/06-konsave-backup.sh"
-fi
+  printf 'deploying %s -> %s\n\n' "$DOTFILES_ROOT" "$CONFIG_HOME"
 
-# --- FASE 03: Fonts ---------------------------------------------------------
-say "FASE 03: Nerd Fonts + Font Awesome"
-if [ -n "$ONLY" ] && [ "$ONLY" != "03" ]; then skip; else
-  confirm "Installare Nerd Fonts (JetBrains Mono, Meslo, Hack)?" && bash "$HERE/scripts/03-fonts.sh"
-fi
+  local entry target existing
+  for entry in "${DIRECT[@]}"; do
+    src="$DOTFILES_ROOT/config/$entry"
+    [[ -d "$src" ]] || continue
+    target="$(link_target "$entry")"
+    if [[ -L "$target" && "$(readlink "$target")" == "$src" ]]; then
+      printf '  ok    %s (already linked)\n' "$entry"
+      printf '%s\n' "$target" >>"$manifest"
+      continue
+    fi
+    if [[ -e "$target" && ! -L "$target" ]]; then
+      backup="${target}.dotfiles-backup.$(date +%s)"
+      mv "$target" "$backup"
+      printf '  moved %s -> %s\n' "$entry" "$(basename "$backup")"
+    fi
+    ln -sfn "$src" "$target"
+    printf '  link  %s\n' "$entry"
+    printf '%s\n' "$target" >>"$manifest"
+  done
 
-# --- FASE 02: Shell prompt (starship) ---------------------------------------
-say "FASE 02: Shell (starship + zsh plugins)"
-if [ -n "$ONLY" ] && [ "$ONLY" != "02" ]; then skip; else
-  confirm "Installare starship e swap p10k → starship?" && bash "$HERE/scripts/02-shell.sh"
-fi
+  for entry in "${COPIED[@]}"; do
+    src="$DOTFILES_ROOT/$entry"
+    [[ -d "$src" ]] || continue
+    rel="${entry#config/}"
+    target="$CONFIG_HOME/$rel"
+    mkdir -p "$(dirname "$target")"
+    # Replace wholesale: partial copies of an xfconf tree are how you get a
+    # half-applied settings channel that nothing reports as wrong.
+    [[ -e "$target" ]] && rm -rf "$target"
+    cp -r "$src" "$target"
+    printf '  copy  %s -> %s\n' "$entry" "$target"
+    printf '%s\n' "$target" >>"$manifest"
+  done
 
-# --- FASE 01: Terminale (ghostty + fastfetch) --------------------------------
-say "FASE 01: Terminale (ghostty + fastfetch)"
-if [ -n "$ONLY" ] && [ "$ONLY" != "01" ]; then skip; else
-  confirm "Installare ghostty + fastfetch con config One Dark Pro?" && bash "$HERE/scripts/01-terminal.sh"
-fi
+  if [[ -f "$DOTFILES_ROOT/$XINITRC_SRC" ]]; then
+    if [[ -e "$HOME/.xinitrc" && ! -L "$HOME/.xinitrc" ]]; then
+      mv "$HOME/.xinitrc" "$HOME/.xinitrc.dotfiles-backup.$(date +%s)"
+    fi
+    ln -sfn "$DOTFILES_ROOT/$XINITRC_SRC" "$HOME/.xinitrc"
+    printf '  link  ~/.xinitrc\n'
+    printf '%s\n' "$HOME/.xinitrc" >>"$manifest"
+  fi
 
-# --- FASE 04: Tema Catppuccin Mocha ------------------------------------------
-say "FASE 04: Tema Catppuccin Mocha (Plasma + Kvantum + GTK + Konsole)"
-if [ -n "$ONLY" ] && [ "$ONLY" != "04" ]; then skip; else
-  confirm "Applicare tema Catppuccin Mocha ovunque?" && bash "$HERE/scripts/04-theme-catppuccin.sh"
-fi
+  printf '\nmanifest written to %s\n' "$manifest"
+  printf 'next: run ~/.dotfiles/scripts/22-keybindings.sh and 21-panel.sh after logging in\n'
+}
 
-# --- FASE 07: Eye-care + trasparenza (eye-care, blur, blue-light) -----------
-say "FASE 07: Eye-care + trasparenza (blur KWin, kdeglobals)"
-if [ -n "$ONLY" ] && [ "$ONLY" != "07" ]; then skip; else
-  confirm "Applicare eye-care + trasparenza (Ghostty/Konsole/KWin)?" && bash "$HERE/scripts/07-eyecare-transparency.sh"
-fi
+do_remove() {
+  local manifest
+  manifest="$(installed_manifest)"
+  if [[ ! -f "$manifest" ]]; then
+    printf 'no manifest at %s; nothing to undo\n' "$manifest"
+    return 0
+  fi
+  printf 'removing what install.sh created:\n'
+  local target
+  while read -r target; do
+    [[ -e "$target" || -L "$target" ]] || continue
+    if [[ -L "$target" ]]; then
+      rm -f "$target"
+      printf '  unlink %s\n' "$target"
+    else
+      rm -rf "$target"
+      printf '  rm    %s\n' "$target"
+    fi
+  done <"$manifest"
+  rm -f "$manifest"
+  printf '\ndone. Backups named *.dotfiles-backup.* were left in place.\n'
+}
 
-# --- FASE 05: Plasma widgets (opzionali) ------------------------------------
-say "FASE 05: Plasma widgets (opzionali — documentazione)"
-if [ -n "$ONLY" ] && [ "$ONLY" != "05" ]; then skip; else
-  confirm "Mostrare widget opzionali?" && bash "$HERE/scripts/05-plasma-widgets.sh"
-fi
+do_check() {
+  local entry src target
+  for entry in "${DIRECT[@]}"; do
+    src="$DOTFILES_ROOT/config/$entry"
+    [[ -d "$src" ]] || continue
+    target="$(link_target "$entry")"
+    if [[ -L "$target" && "$(readlink "$target")" == "$src" ]]; then
+      printf '  ok        %s\n' "$entry"
+    else
+      printf '  would set %s\n' "$entry"
+    fi
+  done
+  for entry in "${COPIED[@]}"; do
+    src="$DOTFILES_ROOT/$entry"
+    [[ -d "$src" ]] || continue
+    rel="${entry#config/}"
+    target="$CONFIG_HOME/$rel"
+    if [[ -d "$target" ]]; then
+      printf '  would replace %s\n' "$rel"
+    else
+      printf '  would copy %s\n' "$rel"
+    fi
+  done
+}
 
-# --- FASE H: Hyprland (opzionale) -------------------------------------------
-if [[ "$CHOICE" =~ ^[HhAa]$ ]]; then
-    say "FASE H: Installazione Hyprland"
-    bash "$HERE/../install-scripts/install-hyprland.sh"
-fi
-
-# --- Fine -------------------------------------------------------------------
-echo ""
-ok "============================================"
-ok "  Rice Catppuccin Mocha installato!"
-ok "============================================"
-echo ""
-if [[ "$CHOICE" =~ ^[Hh]$ ]]; then
-    echo "  Hyprland installato!"
-    echo "  Per avviare: Hyprland da terminale"
-    echo "  Hotkeys: SUPER+Return (term), SUPER+D (menu), SUPER+Q (close)"
-elif [[ "$CHOICE" =~ ^[Kk]$ ]]; then
-    echo "  KDE Plasma installato!"
-    echo "  Riavvia shell: exec zsh"
-    echo "  Imposta wallpaper: bash $HERE/scripts/11-wallpaper-catppuccin.sh"
-    echo "  Installa icone:    bash $HERE/scripts/09-icons-papirus.sh"
-    echo "  Installa GTK:      bash $HERE/scripts/10-gtk-catppuccin.sh"
-    echo "  Verifica visiva:   bash $HERE/scripts/verify-catppuccin.sh"
-else
-    echo "  Tutte le sezioni installate!"
-    echo "  KDE Plasma: seleziona Plasma dal display manager"
-    echo "  Hyprland: seleziona Hyprland dal display manager"
-fi
-echo ""
-echo "  Per rollback: bash $HERE/scripts/99-rollback.sh"
-echo ""
-warn "  NOTA: se qualcosa non va, riavvia Plasma: kquitapp6 plasmashell && kstart plasmashell"
+case "$MODE" in
+  deploy) do_deploy ;;
+  remove) do_remove ;;
+  check)  do_check ;;
+esac

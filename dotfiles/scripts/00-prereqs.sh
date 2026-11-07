@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 00-prereqs.sh — check prerequisite packages for the One Dark Pro rice.
+# 00-prereqs.sh — check the prerequisites the other scripts assume.
 # Idempotente: installa solo ciò che manca.
 set -euo pipefail
 
@@ -35,14 +35,5 @@ else
   exit 1
 fi
 echo "$AUR_HELPER" > /tmp/loq-dotfiles-aur-helper
-
-# --- konsave (AUR) -----------------------------------------------------------
-say "Checking konsave (Plasma profile backup)"
-if pacman -Q konsave >/dev/null 2>&1; then
-  skip "konsave già installato"
-else
-  "$AUR_HELPER" -S --needed --noconfirm konsave
-  ok "installato konsave"
-fi
 
 ok "00-prereqs completa"

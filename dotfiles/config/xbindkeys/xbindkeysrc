@@ -1,0 +1,28 @@
+# xbindkeysrc — mouse-button bindings only.
+#
+# WHY xbindkeys is limited to the mouse here: keyboard shortcuts are owned by
+# xfce4-keyboard-shortcuts, an xfconf channel that survives package updates and is
+# readable with `xfconf-query -c xfce4-keyboard-shortcuts -l`. xbindkeys would
+# bind keys at the X server level, and with it running there is no way to ask Xfce
+# which bindings exist — the two systems would then both claim the same key and
+# the winner would depend on focus timing. So: keys go to the xfconf channel
+# (config/xfce/xfce-perchannel-xml/xfce4-keyboard-shortcuts/), buttons go here.
+#
+# Spec §10 also wants this to keep working if xfwm4's compositor is ever turned
+# off. xbindkeys binds at the X server, not in the compositor, so it is
+# unaffected either way.
+#
+# Button numbering in xbindkeys: 1 = left, 2 = middle, 3 = right.
+
+# Maximise vertically. wmctrl is used rather than a synthesised keystroke because
+# "maximise vertically" has no default xfwm4 keystroke to forward to; it is only
+# reachable as a client message. `-r :ACTIVE:` targets the focused window so this
+# works regardless of which window has pointer focus.
+"wmctrl -r :ACTIVE: -b add,maximized_vert"
+  Super + Button2
+
+# Close window. Forwards the keystroke rather than sending WM_DELETE directly so
+# the app's own close handling (unsaved-changes prompts, "close tab" vs "close
+# window") runs exactly as it would for the keyboard shortcut.
+"xdotool key --clearmodifiers super+q"
+  Super + Button3

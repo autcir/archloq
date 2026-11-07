@@ -1,197 +1,143 @@
 #!/usr/bin/env bash
-# verify-catppuccin.sh — Verifica stato completo rice Catppuccin Mocha su KDE Plasma 6.
-# Output: lista di check con ✅ / ❌ per ogni componente.
+# =============================================================================
+# verify-catppuccin — is the theme actually applied?
+# =============================================================================
+# Reads the live xfconf state instead of checking that files exist. A theme can
+# be fully installed and still not applied, which is the failure mode that a
+# file-presence check cannot see.
+#
+# Exits non-zero if any check fails, so install-scripts/app/09_dotfiles.sh can
+# gate on it.
+# =============================================================================
+
 set -uo pipefail
 
-# Returns the basename of the first entry in $1 matching glob $2, or nothing.
-# Replaces `ls | grep`, which breaks on names containing spaces.
-first_match() {
-  local dir="$1" pattern="$2" c
-  for c in "$dir"/$pattern; do
-    [ -e "$c" ] || continue
-    basename "$c"
-    return 0
-  done
-  return 1
+CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+failures=0
+
+pass() { printf '  ok    %s\n' "$*"; }
+fail() { printf '  FAIL  %s\n' "$*" >&2; failures=$((failures + 1)); }
+info() { printf '  --    %s\n' "$*"; }
+
+printf '== verifying Catppuccin Mocha ==\n\n'
+
+need_x() {
+  printf 'no DISPLAY. Cannot read the live XFCE state.\n' >&2
+  exit 2
 }
+[[ -n "${DISPLAY:-}" ]] || need_x
 
+# -----------------------------------------------------------------------------
+# xfwm4 theme
+# -----------------------------------------------------------------------------
+if command -v xfconf-query >/dev/null 2>&1; then
+  theme="$(xfconf-query -c xfwm4 -p /theme -n 2>/dev/null || true)"
+  if [[ "$theme" == "mocha" ]]; then
+    pass "xfwm4 theme is 'mocha'"
+  elif [[ -n "$theme" ]]; then
+    fail "xfwm4 theme is '$theme', expected 'mocha'"
+  else
+    fail "xfwm4 theme is unset; xfwm4 would fall back to the default theme"
+  fi
 
-PASS=0
-FAIL=0
-WARN=0
-
-pass() { printf '\033[1;32m  ✅ %s\033[0m\n' "$*"; PASS=$((PASS+1)); }
-fail() { printf '\033[1;31m  ❌ %s\033[0m\n' "$*"; FAIL=$((FAIL+1)); }
-warn() { printf '\033[1;33m  ⚠️  %s\033[0m\n' "$*"; WARN=$((WARN+1)); }
-
-echo ""
-echo "╭─────────────────────────────────────────────────────╮"
-echo "│   Catppuccin Mocha Rice — Verifica Sistema           │"
-echo "│   KDE Plasma 6 + Wayland — Lenovo LOQ               │"
-echo "╰─────────────────────────────────────────────────────╯"
-echo ""
-
-# --- Plasma Color Scheme ----------------------------------------------------
-echo "🎨 Plasma Color Scheme"
-CS=$(kreadconfig6 --file ~/.config/kdeglobals --group General --key ColorScheme 2>/dev/null)
-if echo "$CS" | grep -qi "catppuccin"; then
-  pass "Color scheme: $CS"
+  compositor="$(xfconf-query -c xfwm4 -p /general/use_compositing -n 2>/dev/null || echo false)"
+  if [[ "$compositor" == "true" ]]; then
+    pass "xfwm4 compositor is enabled (no external compositor)"
+  else
+    info "xfwm4 compositor is off; that is a valid choice, blur is simply unavailable"
+  fi
 else
-  fail "Color scheme non Catppuccin: '$CS'"
+  fail "xfconf-query not available"
 fi
 
-# --- Kvantum ----------------------------------------------------------------
-echo ""
-echo "🖼  Kvantum Application Style"
-KV=$(kreadconfig6 --file ~/.config/Kvantum/kvantum.kvconfig --group General --key theme 2>/dev/null)
-if echo "$KV" | grep -qi "catppuccin\|mocha"; then
-  pass "Kvantum theme: $KV"
+# -----------------------------------------------------------------------------
+# Theme files actually present
+# -----------------------------------------------------------------------------
+theme_dir="$CONFIG_HOME/xfwm4/themes/mocha"
+if [[ -d "$theme_dir" ]]; then
+  n=$(find "$theme_dir" -name '*.xpm' | wc -l)
+  if ((n >= 7)); then
+    pass "$theme_dir has $n XPM assets"
+  else
+    fail "$theme_dir has only $n XPM assets (expected at least 7: 3 buttons x 2 states + menu)"
+  fi
 else
-  fail "Kvantum non Catppuccin: '$KV'"
-fi
-KDE_STYLE=$(kreadconfig6 --file ~/.config/kdeglobals --group KDE --key widgetStyle 2>/dev/null)
-if [ "$KDE_STYLE" = "kvantum" ]; then
-  pass "KDE widget style: kvantum"
-else
-  warn "KDE widget style non è kvantum: '$KDE_STYLE'"
-fi
-
-# --- Look and Feel ----------------------------------------------------------
-echo ""
-echo "🌐 Look & Feel"
-LAF=$(first_match ~/.local/share/plasma/look-and-feel "*[Cc]atppuccin*" || true)
-if [ -n "$LAF" ]; then
-  pass "Look-and-feel installato: $LAF"
-else
-  fail "Look-and-feel Catppuccin non trovato"
+  fail "$theme_dir does not exist"
 fi
 
-# --- Aurorae Window Decoration ----------------------------------------------
-echo ""
-echo "🪟  Window Decoration (Aurorae)"
-AURORAE=$(first_match ~/.local/share/aurorae/themes "*[Cc]atppuccin*" || true)
-if [ -n "$AURORAE" ]; then
-  pass "Aurorae theme: $AURORAE"
+# -----------------------------------------------------------------------------
+# GTK / icon / cursor, through the real interfaces
+# -----------------------------------------------------------------------------
+if command -v gsettings >/dev/null 2>&1; then
+  gtk="$(gsettings get org.gnome.desktop.interface gtk-theme 2>/dev/null || echo "''")"
+  icons="$(gsettings get org.gnome.desktop.interface icon-theme 2>/dev/null || echo "''")"
+  # libadwaita apps read these; GTK3-only apps read gtk-3.0/settings.ini instead.
+  if [[ "$gtk" == "'Adwaita-dark'" ]]; then
+    pass "GTK theme is Adwaita-dark (the reliable baseline)"
+  elif [[ "$gtk" == "'"* ]]; then
+    info "GTK theme is $gtk -- if it renders light, the theme has no GTK4 support"
+  else
+    fail "could not read the GTK theme"
+  fi
+
+  if [[ "$icons" == "'Papirus-Dark'" ]]; then
+    pass "icon theme is Papirus-Dark"
+  else
+    fail "icon theme is $icons, expected 'Papirus-Dark'"
+  fi
 else
-  fail "Nessun theme Aurorae Catppuccin trovato"
+  info "gsettings not available; skipping GTK and icon checks"
 fi
 
-# --- Cursors ----------------------------------------------------------------
-echo ""
-echo "🖱  Cursor Theme"
-CURSOR=$(kreadconfig6 --file ~/.config/kcminputrc --group Mouse --key cursorTheme 2>/dev/null)
-if echo "$CURSOR" | grep -qi "catppuccin"; then
-  pass "Cursor theme: $CURSOR"
-else
-  warn "Cursor non Catppuccin in kcminputrc: '$CURSOR'"
-  # Controlla anche gtk
-  GTK_CURSOR=$(grep "gtk-cursor-theme-name" ~/.config/gtk-3.0/settings.ini 2>/dev/null | cut -d= -f2)
-  if echo "$GTK_CURSOR" | grep -qi "catppuccin"; then
-    pass "Cursor GTK: $GTK_CURSOR"
+# The cursor xsettingsd reads is /Gtk/CursorThemeName, not /Net/CursorThemeName.
+# Plenty of dotfiles get this wrong and the cursor silently never changes.
+if command -v xfconf-query >/dev/null 2>&1; then
+  cursor="$(xfconf-query -c xsettings -p /Gtk/CursorThemeName -n 2>/dev/null || true)"
+  if [[ -n "$cursor" ]]; then
+    pass "cursor theme is '$cursor' (read from /Gtk/CursorThemeName)"
+  else
+    fail "cursor theme unset in xsettings /Gtk/CursorThemeName"
   fi
 fi
 
-# --- Splash Screen ----------------------------------------------------------
-echo ""
-echo "💫 Splash Screen"
-SPLASH=$(kreadconfig6 --file ~/.config/ksplashrc --group KSplash --key Theme 2>/dev/null)
-if echo "$SPLASH" | grep -qi "catppuccin"; then
-  pass "Splash: $SPLASH"
+# -----------------------------------------------------------------------------
+# Terminal
+# -----------------------------------------------------------------------------
+if [[ -f "$CONFIG_HOME/foot/foot.ini" ]]; then
+  ttheme="$(sed -n 's/^theme=//p' "$CONFIG_HOME/foot/foot.ini" 2>/dev/null | head -1)"
+  if [[ "$ttheme" == "mocha" ]]; then
+    pass "foot terminal theme is mocha"
+  else
+    info "foot theme is '${ttheme:-unset}'"
+  fi
 else
-  warn "Splash non Catppuccin: '$SPLASH' (None = disabilitato, ok)"
+  info "no foot config at $CONFIG_HOME/foot/foot.ini"
 fi
 
-# --- Icon Theme -------------------------------------------------------------
-echo ""
-echo "🗂  Icon Theme"
-ICONS=$(kreadconfig6 --file ~/.config/kdeglobals --group Icons --key Theme 2>/dev/null)
-if echo "$ICONS" | grep -qi "papirus"; then
-  pass "Icon theme: $ICONS (Papirus ✓)"
-elif echo "$ICONS" | grep -qi "catppuccin"; then
-  pass "Icon theme: $ICONS"
+# -----------------------------------------------------------------------------
+# Shell
+# -----------------------------------------------------------------------------
+if command -v starship >/dev/null 2>&1; then
+  if [[ -f "$CONFIG_HOME/starship/starship.toml" ]]; then
+    pass "starship is installed and configured"
+  else
+    fail "starship is installed but has no config"
+  fi
 else
-  warn "Icon theme non Papirus/Catppuccin: '$ICONS' — esegui 09-icons-papirus.sh"
+  info "starship not installed"
 fi
 
-# --- GTK Theme --------------------------------------------------------------
-echo ""
-echo "🐧 GTK Theme"
-GTK_THEME=$(grep "gtk-theme-name" ~/.config/gtk-3.0/settings.ini 2>/dev/null | cut -d= -f2)
-if echo "$GTK_THEME" | grep -qi "catppuccin"; then
-  pass "GTK3 theme: $GTK_THEME"
-else
-  warn "GTK3 non Catppuccin: '$GTK_THEME' — esegui 10-gtk-catppuccin.sh"
-fi
+# -----------------------------------------------------------------------------
+# Known limitation, stated rather than hidden
+# -----------------------------------------------------------------------------
+printf '\n'
+info "NOTE: libadwaita applications (GNOME Calculator, GNOME Text Editor, most"
+info "      Flatpaks) ignore the GTK3 theme. Dark icons with a light app is the"
+info "      expected result, not a broken install. See docs/REFORMAT-XFCE.md §10."
 
-# --- Ghostty ----------------------------------------------------------------
-echo ""
-echo "👻 Ghostty Terminal"
-GHOSTTY_CONF="$HOME/.config/ghostty/config"
-if [ -f "$GHOSTTY_CONF" ] && grep -q "catppuccin\|1e1e2e\|cdd6f4" "$GHOSTTY_CONF" 2>/dev/null; then
-  pass "Ghostty: Catppuccin Mocha config presente"
-else
-  warn "Ghostty config non trovata o non Catppuccin (controlla ~/.config/ghostty/config)"
+printf '\n'
+if ((failures > 0)); then
+  printf '%s check(s) failed\n' "$failures" >&2
+  exit 1
 fi
-
-# --- Konsole ----------------------------------------------------------------
-echo ""
-echo "📟 Konsole"
-if [ -f ~/.local/share/konsole/CatppuccinMocha.colorscheme ]; then
-  pass "Konsole colorscheme: CatppuccinMocha"
-else
-  fail "CatppuccinMocha.colorscheme non installata in ~/.local/share/konsole/"
-fi
-
-# --- Starship ---------------------------------------------------------------
-echo ""
-echo "🚀 Starship Prompt"
-STARSHIP_CONF="$HOME/.config/starship.toml"
-if [ -f "$STARSHIP_CONF" ] && grep -q "catppuccin\|89b4fa\|cba6f7\|1e1e2e" "$STARSHIP_CONF" 2>/dev/null; then
-  pass "Starship: Catppuccin Mocha palette"
-else
-  warn "starship.toml non trovato o non Catppuccin (controlla ~/.config/starship.toml)"
-fi
-
-# --- Wallpaper --------------------------------------------------------------
-echo ""
-echo "🏔  Wallpaper"
-WALL_DIR="$HOME/.local/share/wallpapers"
-WALL=$(first_match "$WALL_DIR" "*[Cc]atppuccin*" || first_match "$WALL_DIR" "*[Mm]ocha*" || true)
-if [ -n "$WALL" ]; then
-  pass "Wallpaper Catppuccin trovato: $WALL"
-else
-  warn "Nessun wallpaper Catppuccin in $WALL_DIR — esegui 11-wallpaper-catppuccin.sh"
-fi
-
-# --- KWin blur --------------------------------------------------------------
-echo ""
-echo "🌫  KWin Blur + Compositing"
-BLUR=$(kreadconfig6 --file ~/.config/kwinrc --group "Effect-blur" --key BlurStrength 2>/dev/null)
-COMP=$(kreadconfig6 --file ~/.config/kwinrc --group Compositing --key Enabled 2>/dev/null)
-if [ "$COMP" = "true" ]; then
-  pass "Compositing: attivo"
-else
-  warn "Compositing non impostato esplicitamente: '$COMP'"
-fi
-if [ -n "$BLUR" ]; then
-  pass "Blur strength: $BLUR"
-else
-  warn "BlurStrength non impostato (usa 07-eyecare-transparency.sh)"
-fi
-
-# --- Riepilogo --------------------------------------------------------------
-echo ""
-echo "╭──────────────────────────────────────╮"
-printf "│  ✅ PASS: %-4d  ❌ FAIL: %-4d  ⚠️  WARN: %-4d │\n" "$PASS" "$FAIL" "$WARN"
-echo "╰──────────────────────────────────────╯"
-echo ""
-
-if [ "$FAIL" -eq 0 ]; then
-  echo "  🎉 Rice Catppuccin Mocha completo! Ottimo lavoro."
-elif [ "$FAIL" -le 2 ]; then
-  echo "  🔧 Quasi completo — risolvi i FAIL sopra."
-else
-  echo "  ⚡ Diversi componenti mancanti. Esegui gli script nella sequenza:"
-  echo "     bash install.sh --yes"
-fi
-echo ""
+printf 'all checks passed\n'

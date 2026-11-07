@@ -1,110 +1,185 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # =============================================================================
-# LOQ MASTER INSTALLER
+# pacmaster — orchestrator
 # =============================================================================
-# Main orchestrator for Lenovo LOQ setup on Arch Linux
+# Runs the numbered install steps in order, then the audit and the pre-reboot
+# gate. Every step is idempotent, so re-running after fixing one failure is safe
+# and cheaper than starting over.
+#
+#   sudo ./install-scripts/pacmaster.sh              run everything
+#   sudo ./install-scripts/pacmaster.sh 01 02 07    run selected steps
+#   sudo ./install-scripts/pacmaster.sh --list       show the steps
+#   sudo ./install-scripts/pacmaster.sh --audit      only re-run the audit
+#
+# On first boot after the installer has already run, you almost always want:
+#   ./install-scripts/pacmaster.sh --resume
+# which skips the steps that already left a completion marker.
 # =============================================================================
 
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/lib/utils.sh"
+PACMASTER_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ARCHLOQ_ROOT="$(cd "$PACMASTER_DIR/.." && pwd)"
+export ARCHLOQ_ROOT
+# shellcheck source=lib/utils.sh
+source "$PACMASTER_DIR/lib/utils.sh"
 
-# Default configuration
-CONFIG_FILE="${CONFIG_FILE:-$SCRIPT_DIR/config/loq.conf}"
-[[ -f "$CONFIG_FILE.local" ]] && source "$CONFIG_FILE.local"
-[[ -f "$CONFIG_FILE" ]] && source "$CONFIG_FILE"
+usage() {
+  sed -n '2,18p' "$0" | sed 's/^# \{0,1\}//'
+  cat <<'EOF'
 
-# Colors
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m'
+Options:
+  --list        list the install steps and their completion state
+  --audit       run only 90_postinstall.sh
+  --resume      run only the steps that have no completion marker
+  --from N      start at step N and run everything from there
+  -h, --help    this text
 
-say() { printf '\n${BLUE}==>${NC} %s\n' "$*"; }
-ok() { printf '  ${GREEN}✓${NC} %s\n' "$*"; }
-warn() { printf '  ${YELLOW}!${NC} %s\n' "$*"; }
-error() { printf '  ${RED}✗${NC} %s\n' "$*"; }
-
-# Check if running as root
-check_root() {
-    if [[ $EUID -ne 0 ]]; then
-        error "This script must be run as root"
-        exit 1
-    fi
+Steps always run:  90_postinstall.sh, 99_safe_reboot_check.sh
+EOF
 }
 
-# Check prerequisites
-check_prerequisites() {
-    say "Checking prerequisites..."
-    
-    # Check for yay
-    if ! command -v yay &> /dev/null; then
-        warn "yay not found - AUR packages will be skipped"
+APP_DIR="$PACMASTER_DIR/app"
+STEPS=(
+  01_kernel_boot.sh
+  02_gpu_nvidia.sh
+  03_power.sh
+  04_cpu_undervolt.sh
+  05_desktop_xfce.sh
+  06_hardening.sh
+  07_snapshots.sh
+  08_backup_borg.sh
+  09_dotfiles.sh
+  10_software.sh
+)
+
+# 01_kernel_boot.sh -> 01_kernel_boot, which is the state marker name.
+marker_for() { printf '%s' "${1%.sh}"; }
+
+list_steps() {
+  say "install steps:"
+  local step marker
+  for step in "${STEPS[@]}"; do
+    marker="$(marker_for "$step")"
+    if marker_done "$marker"; then
+      printf '  %s  %-28s done\n' "$C_GREEN" "$step"
+    else
+      printf '  %s  %-28s pending\n' "$C_DIM" "$step"
     fi
-    
-    # Check for internet
-    if ! ping -c1 1.1.1.1 &> /dev/null; then
-        error "No internet connection"
-        exit 1
-    fi
-    
-    ok "Prerequisites met"
+  done
 }
 
-# Main installation flow
 main() {
-    say "Starting Lenovo LOQ setup..."
-    
-    check_root
-    check_prerequisites
-    
-    # Step 1: Kernel and NVIDIA
-    if [[ "${SKIP_KERNEL:-0}" != "1" ]]; then
-        bash "$SCRIPT_DIR/app/01_kernel_nvidia.sh"
+  local -a selected=()
+  local only_audit=0
+  local only_resume=0
+  local from_step=""
+
+  if (($# == 0)); then
+    selected=("${STEPS[@]}")
+  else
+    while (($#)); do
+      case "$1" in
+        -h|--help) usage; exit 0 ;;
+        --list) list_steps; exit 0 ;;
+        --audit) only_audit=1; shift ;;
+        --resume) only_resume=1; shift ;;
+        --from)
+          [[ -n "${2:-}" ]] || die "--from needs a step number, e.g. --from 02"
+          from_step="$2"
+          shift 2
+          ;;
+        [0-9]*)
+          local found=0
+          for step in "${STEPS[@]}"; do
+            if [[ "$step" == "$1"* ]]; then
+              selected+=("$step")
+              found=1
+              break
+            fi
+          done
+          ((found)) || die "no install step matches '$1'"
+          shift
+          ;;
+        *) die "unknown argument: $1 (try --help)" ;;
+      esac
+    done
+  fi
+
+  require_root
+  require_config
+  init_dirs
+  rm -f "$ARCHLOQ_STATE_DIR/summary"
+
+  if ((only_audit)); then
+    selected=()
+  fi
+
+  # --from N: keep only steps at or after the first one matching N.
+  if [[ -n "$from_step" ]]; then
+    local -a tail_steps=()
+    local skipping=1 step
+    for step in "${STEPS[@]}"; do
+      if ((skipping)) && [[ "$step" == "$from_step"* ]]; then
+        skipping=0
+      fi
+      ((skipping)) || tail_steps+=("$step")
+    done
+    ((skipping)) && die "no install step starts with '$from_step'"
+    selected=("${tail_steps[@]}")
+  fi
+
+  if ((only_resume)); then
+    local -a pending=()
+    for step in "${STEPS[@]}"; do
+      if marker_done "$(marker_for "$step")"; then
+        skip "$step already done"
+      else
+        pending+=("$step")
+      fi
+    done
+    selected=("${pending[@]}")
+  fi
+
+  ((${#selected[@]})) && say "will run: ${selected[*]}"
+
+  local step start total=0
+  for step in "${selected[@]}"; do
+    total=$((total + 1))
+    say "[$total/${#selected[@]}] ${step}"
+    start="$(date +%s)"
+
+    if "$APP_DIR/$step"; then
+      ok "${step} finished in $(( $(date +%s) - start ))s"
+    else
+      err "${step} FAILED after $(( $(date +%s) - start ))s"
+      err "state so far:"
+      list_steps
+      echo
+      err "Fix the cause and re-run just that step, then resume:"
+      err "  $0 --resume"
+      exit 1
     fi
-    
-    # Step 2: Power management
-    if [[ "${SKIP_POWER:-0}" != "1" ]]; then
-        bash "$SCRIPT_DIR/app/02_power_management.sh"
-    fi
-    
-    # Step 3: CPU tuning (undervolt)
-    if [[ "${SKIP_UNDERVOLT:-0}" != "1" ]]; then
-        bash "$SCRIPT_DIR/app/03_cpu_tuning.sh"
-    fi
-    
-    # Step 4: GPU switching
-    if [[ "${SKIP_GPU:-0}" != "1" ]]; then
-        bash "$SCRIPT_DIR/app/04_gpu_switching.sh"
-    fi
-    
-    # Step 5: Fan control
-    if [[ "${SKIP_FAN:-0}" != "1" ]]; then
-        bash "$SCRIPT_DIR/app/05_fan_control.sh"
-    fi
-    
-    # Step 6: System performance
-    if [[ "${SKIP_PERF:-0}" != "1" ]]; then
-        bash "$SCRIPT_DIR/app/06_system_perf.sh"
-    fi
-    
-    # Step 7: Scripts and configs
-    if [[ "${SKIP_SCRIPTS:-0}" != "1" ]]; then
-        bash "$SCRIPT_DIR/app/07_install_scripts.sh"
-    fi
-    
-    # Step 8: Local LLM setup
-    if [[ "${SKIP_LLM:-0}" != "1" ]]; then
-        bash "$SCRIPT_DIR/app/08_local_llm.sh"
-    fi
-    
-    # Step 9: Safe reboot check
-    bash "$SCRIPT_DIR/app/99_safe_reboot_check.sh"
-    
-    say "Installation complete!"
-    say "Run verify-boot.sh before rebooting"
+  done
+
+  # The audit and the gate always run: they are what tells you the machine is
+  # safe to reboot.
+  say "auditing"
+  if ! "$APP_DIR/90_postinstall.sh"; then
+    err "the audit found problems. Not declaring success."
+    list_steps
+    exit 1
+  fi
+
+  say "pre-reboot gate"
+  if ! "$APP_DIR/99_safe_reboot_check.sh"; then
+    err "the pre-reboot gate failed. See the recovery notes above."
+    exit 1
+  fi
+
+  ok ""
+  ok "install complete"
+  list_steps
 }
 
 main "$@"

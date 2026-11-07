@@ -12,7 +12,7 @@ body:
     id: script
     attributes:
       label: Script or config file
-      placeholder: install-scripts/app/01_kernel_nvidia.sh
+      placeholder: install-scripts/app/02_gpu_nvidia.sh
     validations:
       required: true
 

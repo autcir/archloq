@@ -1,34 +1,52 @@
 #!/usr/bin/env bash
-# 99-rollback.sh — ripristina lo stato pre-One Dark Pro da backup konsave.
-# Uso: bash 99-rollback.sh [BACKUP_NAME]
-# Senza argomenti lista i backup disponibili.
+# =============================================================================
+# 99-rollback — undo the deploy
+# =============================================================================
+# The previous version restored a Plasma profile from a konsave backup. konsave
+# does not exist on Xfce, and more importantly a full-profile restore is the
+# wrong granularity: it throws away unrelated configuration changes made since.
+#
+# This undoes exactly what install.sh created, tracked in its manifest, and
+# leaves anything it did not create alone. Backups written by install.sh are kept
+# rather than deleted.
+# =============================================================================
+
 set -euo pipefail
 
-say()  { printf '\n\033[1;36m[INFO]\033[0m %s\n' "$*"; }
-ok()   { printf '\033[1;32m[OK]\033[0m  %s\n' "$*"; }
-err()  { printf '\033[1;31m[ERR]\033[0m %s\n' "$*" >&2; }
+DOTFILES_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+manifest="$CONFIG_HOME/.dotfiles-manifest"
 
-if ! command -v konsave >/dev/null 2>&1; then
-  err "konsave non installato"
-  exit 1
-fi
+say() { printf '==> %s\n' "$*"; }
+ok()  { printf '  ok  %s\n' "$*"; }
+warn(){ printf '  warn %s\n' "$*" >&2; }
 
-BACKUP_NAME="${1:-}"
-
-if [ -z "$BACKUP_NAME" ]; then
-  say "Backup konsave disponibili:"
-  konsave -l 2>/dev/null || echo "  (nessun backup trovato)"
-  echo ""
-  echo "  Uso: bash 99-rollback.sh <BACKUP_NAME>"
+if [[ ! -f "$manifest" ]]; then
+  warn "no manifest at $manifest -- install.sh has not run, or it was already rolled back"
   exit 0
 fi
 
-say "Ripristinando backup: $BACKUP_NAME"
-read -p "Procedere con il rollback? [y/N] " confirm
-if [[ "$confirm" != [yY] ]]; then
-  echo "Rollback annullato."
-  exit 0
-fi
+say "rolling back the dotfiles deploy"
+removed=0
+kept=0
 
-konsave -a "$BACKUP_NAME"
-ok "Rollback completato. Riavvia Plasma: systembar kquitapp6 plasmashell && kstart plasmashell"
+while read -r target; do
+  [[ -n "$target" ]] || continue
+  if [[ -L "$target" ]]; then
+    rm -f "$target"
+    printf '  unlink %s\n' "$target"
+    removed=$((removed + 1))
+  elif [[ -d "$target" ]]; then
+    rm -rf "$target"
+    printf '  rm     %s\n' "$target"
+    removed=$((removed + 1))
+  else
+    kept=$((kept + 1))
+  fi
+done <"$manifest"
+
+rm -f "$manifest"
+
+say "removed $removed item(s); $kept were already gone"
+say "anything install.sh saved as *.dotfiles-backup.* was left in place."
+say "to list them:  find $CONFIG_HOME -maxdepth 2 -name '*.dotfiles-backup.*'"

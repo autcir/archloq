@@ -54,7 +54,7 @@ require("lazy").setup({
       require("catppuccin").setup({
         flavour = "mocha",
         background = { light = "latte", dark = "mocha" },
-        transparent_background = true,   -- blur KWin passa attraverso
+        transparent_background = true,   -- xfwm4 non applica blur alle finestre: il terminale fa da sfondo
         show_end_of_buffer = false,
         term_colors = true,
         dim_inactive = { enabled = true, shade = "dark", percentage = 0.15 },

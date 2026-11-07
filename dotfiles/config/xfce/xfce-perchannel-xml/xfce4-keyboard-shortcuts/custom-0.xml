@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Keyboard shortcuts live in the xfce4-keyboard-shortcuts channel, not in
+  ~/.Xbindkeysrc: xfce4-session's keyboard-shortcuts plugin reads this channel at
+  startup and it survives package upgrades. Mouse bindings are the exception and
+  are in dotfiles/config/xbindkeys/xbindkeysrc.
+
+  Apply with: ./scripts/22-keybindings.sh
+  This file is the reference copy; the script is what actually writes the
+  channel, because a stale XML here cannot be proven to match the running XFCE.
+-->
+<channel name="xfce4-keyboard-shortcuts" version="1.0">
+  <property name="commands" type="empty">
+    <property name="custom-Super-Return" type="empty">
+      <property name="name" type="string" value="Terminal"/>
+      <property name="command" type="string" value="alacritty"/>
+    </property>
+    <property name="custom-Super-d" type="empty">
+      <property name="name" type="string" value="Launcher"/>
+      <property name="command" type="string" value="rofi -show drun"/>
+    </property>
+    <property name="custom-Super-w" type="empty">
+      <property name="name" type="string" value="Windows"/>
+      <property name="command" type="string" value="rofi -show window"/>
+    </property>
+    <property name="custom-Super-e" type="empty">
+      <property name="name" type="string" value="File manager"/>
+      <property name="command" type="string" value="thunar"/>
+    </property>
+    <property name="custom-Super-p" type="empty">
+      <property name="name" type="string" value="Display settings"/>
+      <property name="command" type="string" value="xfce4-display-settings --minimal"/>
+    </property>
+    <property name="custom-Print" type="empty">
+      <property name="name" type="string" value="Screenshot"/>
+      <property name="command" type="string" value="xfce4-screenshooter -f -s $HOME/Pictures"/>
+    </property>
+  </property>
+</channel>

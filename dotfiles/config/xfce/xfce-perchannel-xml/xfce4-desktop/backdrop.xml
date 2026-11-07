@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- xfdesktop backdrops. Workspace names must match the workspace_count set in
+     the xfwm4 channel. -->
+<channel name="xfce4-desktop" version="1.0">
+  <property name="backdrop" type="empty">
+    <property name="loq-0" type="empty">
+      <property name="color-style" type="int" value="0"/>
+      <property name="image-style" type="int" value="1"/>
+      <property name="show" type="bool" value="true"/>
+    </property>
+    <property name="loq-1" type="empty">
+      <property name="color-style" type="int" value="0"/>
+      <property name="image-style" type="int" value="1"/>
+      <property name="show" type="bool" value="true"/>
+    </property>
+    <property name="loq-2" type="empty">
+      <property name="color-style" type="int" value="0"/>
+      <property name="image-style" type="int" value="1"/>
+      <property name="show" type="bool" value="true"/>
+    </property>
+    <property name="loq-3" type="empty">
+      <property name="color-style" type="int" value="0"/>
+      <property name="image-style" type="int" value="1"/>
+      <property name="show" type="bool" value="true"/>
+    </property>
+  </property>
+</channel>

@@ -1,0 +1,22 @@
+/* XPM */
+static char * menu_xpm[] = {
+"16 16 2 1",
+"c c #181825",
+"d c #cdd6f4",
+" cccccccccccccccc",
+" cccccccccccccccc",
+" cccccccccccccccc",
+" cccccccccccccccc",
+" cccddddddddddccc",
+" cccccccccccccccc",
+" cccccccccccccccc",
+" cccddddddddddccc",
+" cccccccccccccccc",
+" cccccccccccccccc",
+" cccddddddddddccc",
+" cccccccccccccccc",
+" cccccccccccccccc",
+" cccccccccccccccc",
+" cccccccccccccccc",
+" cccccccccccccccc",
+};

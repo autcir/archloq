@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- xfwm4: window manager behaviour. -->
+<channel name="xfwm4" version="1.0">
+  <property name="general" type="empty">
+    <property name="snap_to_border" type="bool" value="true"/>
+    <property name="snap_to_windows" type="bool" value="true"/>
+    <property name="snap_to_desktop" type="bool" value="false"/>
+    <property name="wrap_workspaces" type="bool" value="true"/>
+    <property name="workspace_count" type="int" value="4"/>
+    <!-- focus-follows-mouse is deliberately off: it makes click-to-focus feel
+         broken for anyone trained on either other behaviour. -->
+    <property name="focus_new" type="int" value="1"/>
+    <property name="click_to_focus" type="bool" value="true"/>
+    <property name="focus_delay" type="int" value="400"/>
+    <property name="raise_on_click" type="bool" value="true"/>
+  </property>
+  <property name="compositing" type="empty">
+    <!-- xfwm4's own compositor. No picom: two compositors fight over the same
+         redirected windows and the result is tearing and lost input. -->
+    <property name="use_compositing" type="bool" value="true"/>
+    <property name="vblank" type="int" value="1"/>
+    <property name="show_frame_shadow" type="bool" value="true"/>
+    <property name="show_popup_shadow" type="bool" value="false"/>
+  </property>
+</channel>

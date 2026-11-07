@@ -1,0 +1,241 @@
+{
+  "archinstall-language": "English",
+  "audio_config": {
+    "audio": "pipewire"
+  },
+  "bootloader_config": {
+    "bootloader": "Systemd-boot",
+    "removable": false,
+    "uki": false
+  },
+  "custom_commands": [
+    "sed -i 's/^HOOKS=.*/HOOKS=(base udev autodetect microcode modconf kms keyboard keymap consolefont systemd sd-encrypt btrfs filesystems fsck)/' /etc/mkinitcpio.conf",
+    "mkdir -p /etc/mkinitcpio.conf.d && printf '%s\\n' 'install_modules+=\" nvidia nvidia_drm nvidia_modeset nvidia_uvm \"' > /etc/mkinitcpio.conf.d/nvidia.conf"
+  ],
+  "debug": false,
+  "disk_config": {
+    "config_type": "manual_partitioning",
+    "device_modifications": [
+      {
+        "device": "/dev/nvme0n1",
+        "partitions": [
+          {
+            "btrfs": [],
+            "dev_path": null,
+            "flags": [
+              "boot",
+              "esp"
+            ],
+            "fs_type": "fat32",
+            "mount_options": [
+              "umask=0077"
+            ],
+            "mountpoint": "/boot",
+            "obj_id": "7a00c7c3-b2df-46a4-838e-1185af713539",
+            "size": {
+              "sector_size": {
+                "unit": "B",
+                "value": 512
+              },
+              "unit": "MiB",
+              "value": 1024
+            },
+            "start": {
+              "sector_size": {
+                "unit": "B",
+                "value": 512
+              },
+              "unit": "MiB",
+              "value": 1
+            },
+            "status": "create",
+            "type": "primary"
+          },
+          {
+            "btrfs": [],
+            "dev_path": null,
+            "flags": [
+              "swap"
+            ],
+            "fs_type": "linux-swap",
+            "mount_options": [],
+            "mountpoint": null,
+            "obj_id": "31fbac98-82d0-472b-bcce-86978fb96dc0",
+            "size": {
+              "sector_size": {
+                "unit": "B",
+                "value": 512
+              },
+              "unit": "MiB",
+              "value": 40960
+            },
+            "start": {
+              "sector_size": {
+                "unit": "B",
+                "value": 512
+              },
+              "unit": "MiB",
+              "value": 1025
+            },
+            "status": "create",
+            "type": "primary"
+          },
+          {
+            "btrfs": [
+              {
+                "mountpoint": "/",
+                "name": "@"
+              },
+              {
+                "mountpoint": "/var",
+                "name": "@var"
+              },
+              {
+                "mountpoint": "/.timeshift",
+                "name": "@.timeshift"
+              }
+            ],
+            "dev_path": null,
+            "flags": [],
+            "fs_type": "btrfs",
+            "mount_options": [
+              "compress=zstd",
+              "noatime",
+              "ssd",
+              "space_cache=v2"
+            ],
+            "mountpoint": null,
+            "obj_id": "ecdac2a5-b43c-46d1-a0b4-0172c43e8276",
+            "size": {
+              "sector_size": {
+                "unit": "B",
+                "value": 512
+              },
+              "unit": "MiB",
+              "value": 204800
+            },
+            "start": {
+              "sector_size": {
+                "unit": "B",
+                "value": 512
+              },
+              "unit": "MiB",
+              "value": 41985
+            },
+            "status": "create",
+            "type": "primary"
+          },
+          {
+            "btrfs": [
+              {
+                "mountpoint": "/home",
+                "name": "@home"
+              }
+            ],
+            "dev_path": null,
+            "flags": [
+              "linux-home"
+            ],
+            "fs_type": "btrfs",
+            "mount_options": [
+              "compress=zstd",
+              "noatime",
+              "ssd",
+              "space_cache=v2"
+            ],
+            "mountpoint": "/home",
+            "obj_id": "f226bc4f-d74a-4ecc-af54-7473a6f491cb",
+            "size": {
+              "sector_size": {
+                "unit": "B",
+                "value": 512
+              },
+              "unit": "MiB",
+              "value": 729976
+            },
+            "start": {
+              "sector_size": {
+                "unit": "B",
+                "value": 512
+              },
+              "unit": "MiB",
+              "value": 246785
+            },
+            "status": "create",
+            "type": "primary"
+          }
+        ],
+        "wipe": true
+      }
+    ],
+    "disk_encryption": {
+      "encryption_type": "luks",
+      "partitions": [
+        "31fbac98-82d0-472b-bcce-86978fb96dc0",
+        "ecdac2a5-b43c-46d1-a0b4-0172c43e8276",
+        "f226bc4f-d74a-4ecc-af54-7473a6f491cb"
+      ]
+    }
+  },
+  "hostname": "loq",
+  "kernels": [
+    "linux-zen"
+  ],
+  "locale_config": {
+    "kb_layout": "it",
+    "sys_enc": "UTF-8",
+    "sys_lang": "it_IT.UTF-8"
+  },
+  "mirror_config": {
+    "custom_servers": [],
+    "mirror_regions": {
+      "France": [
+        "https://mirror.accum.se/archlinux/$repo/os/$arch"
+      ],
+      "Germany": [
+        "https://mirror.freedif.org/archlinux/$repo/os/$arch"
+      ],
+      "Italy": [
+        "https://archmirror.it/repos/$repo/os/$arch"
+      ]
+    },
+    "optional_repositories": [
+      "multilib"
+    ]
+  },
+  "network_config": {
+    "type": "nm"
+  },
+  "ntp": true,
+  "packages": [
+    "base",
+    "base-devel",
+    "btrfs-assistant",
+    "btrfs-progs",
+    "cronie",
+    "cryptsetup",
+    "curl",
+    "efibootmgr",
+    "git",
+    "intel-ucode",
+    "linux-firmware",
+    "linux-zen",
+    "linux-zen-headers",
+    "man-db",
+    "man-pages",
+    "nano",
+    "networkmanager",
+    "openssh",
+    "timeshift",
+    "vim",
+    "wget"
+  ],
+  "parallel_downloads": 10,
+  "profile_config": {},
+  "services": [],
+  "swap": {
+    "algorithm": "zstd",
+    "enabled": true
+  },
+  "timezone": "Europe/Rome"
+}
