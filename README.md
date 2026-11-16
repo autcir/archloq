@@ -3,7 +3,7 @@
 [![Arch Linux](https://img.shields.io/badge/Arch_Linux-1793D1?style=for-the-badge&logo=arch-linux&logoColor=white)](https://archlinux.org/)
 [![Lenovo LOQ](https://img.shields.io/badge/Lenovo_LOQ-Yellow?style=for-the-badge)]()
 [![NVIDIA Blackwell](https://img.shields.io/badge/NVIDIA-Blackwell_sm__120-76B900?style=for-the-badge&logo=nvidia&logoColor=white)]()
-[![CI](https://github.com/ciroautuori/archloq/actions/workflows/ci.yml/badge.svg)](https://github.com/ciroautuori/archloq/actions/workflows/ci.yml)
+[![CI](https://github.com/autcir/archloq/actions/workflows/ci.yml/badge.svg)](https://github.com/autcir/archloq/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 Complete setup for Lenovo LOQ 17IRX10 (i7-13700HX + RTX 5060 Laptop 8GB) on Arch Linux.
@@ -39,7 +39,7 @@ Complete setup for Lenovo LOQ 17IRX10 (i7-13700HX + RTX 5060 Laptop 8GB) on Arch
 ## Quick Start
 
 ```bash
-git clone https://github.com/ciroautuori/archloq.git
+git clone https://github.com/autcir/archloq.git
 cd archloq
 
 # 1. Review the config first — these scripts run as root
