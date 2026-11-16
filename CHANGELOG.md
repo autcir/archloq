@@ -42,4 +42,4 @@ hardware for some time; this release makes the repository usable by anyone else.
 - `.editorconfig`, `.shellcheckrc`, Dependabot for GitHub Actions.
 - `runtime/fetch-runtime.sh` to clone or update the upstream reference repos.
 
-[1.0.0]: https://github.com/ciroautuori/archloq/releases/tag/v1.0.0
+[1.0.0]: https://github.com/autcir/archloq/releases/tag/v1.0.0
